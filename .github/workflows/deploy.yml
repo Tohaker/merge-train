@@ -1,0 +1,33 @@
+name: Deployment
+
+on:
+  push:
+    branches:
+      master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up NodeJS 
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: '14'
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 0.14.2
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build App
+        run: |
+          npm i
+          npm run build
+        
+      - name: Initialise terraform
+        run: |
+          cd deployment
+          terraform init
