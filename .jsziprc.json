@@ -2,7 +2,8 @@
     "compressionLevel": 9,
     "dereferenceLinks": true,
     "entries": [
-        "dist/SlackBot",
+        "dist",
+        "SlackBot",
         "node_modules",
         "host.json",
         "proxies.json"
