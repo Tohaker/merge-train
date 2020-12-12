@@ -10,7 +10,7 @@ variable "environment" {
 
 variable "location" {
   type    = string
-  default = "southuk"
+  default = "uksouth"
 }
 
 variable "functionapp" {
