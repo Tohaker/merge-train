@@ -15,7 +15,7 @@ variable "location" {
 
 variable "functionapp" {
   type    = string
-  default = "./build/functionapp.zip"
+  default = "../build/functionapp.zip"
 }
 
 variable "filename" {
