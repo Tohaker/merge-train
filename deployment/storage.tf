@@ -23,4 +23,5 @@ resource "azurerm_storage_blob" "functioncode" {
   storage_container_name = azurerm_storage_container.deployments.name
   type                   = "Block"
   source                 = var.functionapp
+  content_md5            = filemd5(var.filename)
 }
