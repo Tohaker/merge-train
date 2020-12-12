@@ -21,6 +21,7 @@ If you build and run the project in the VSCode DevContainer all prerequisites wi
 
 To run the function locally;
 ```bash
+npm i
 npm start
 ```
 

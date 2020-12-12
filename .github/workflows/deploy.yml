@@ -31,3 +31,5 @@ jobs:
         run: |
           cd deployment
           terraform init
+        env:
+          ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}

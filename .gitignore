@@ -95,3 +95,6 @@ local.settings.json
 
 # Azure secrets
 service-principal.json
+
+# Terraform artifacts
+.terraform

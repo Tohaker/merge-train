@@ -23,8 +23,6 @@ ARG INSTALL_AZURE_CLI="true"
 ARG INSTALL_DOCKER="true"
 # [Option] Install Node.js
 ARG INSTALL_NODE="true"
-# [Option] Install Azure Functions Core Tools
-ARG INSTALL_CORE_TOOLS="true"
 
 ARG NODE_VERSION="lts/*"
 ENV NVM_DIR=/usr/local/share/nvm
@@ -33,8 +31,7 @@ ENV NVM_SYMLINK_CURRENT=true \
 RUN if [ "${INSTALL_AZURE_CLI}" = "true" ]; then bash /tmp/library-scripts/azcli-debian.sh; fi \
     && if [ "${INSTALL_NODE}" = "true" ]; then bash /tmp/library-scripts/node-debian.sh "${NVM_DIR}" "${NODE_VERSION}" "${USERNAME}"; fi \
     && if [ "${INSTALL_DOCKER}" = "true" ]; then \
-    bash /tmp/library-scripts/docker-debian.sh "true" "/var/run/docker-host.sock" "/var/run/docker.sock" "${USERNAME}"; fi \
-    && if [ "${INSTALL_CORE_TOOLS}" = "true" ]; then bash /tmp/library-scripts/azcoretools-debian.sh; \
+    bash /tmp/library-scripts/docker-debian.sh "true" "/var/run/docker-host.sock" "/var/run/docker.sock" "${USERNAME}"; \
     else \
     echo '#!/bin/bash\n"$@"' > /usr/local/share/docker-init.sh && chmod +x /usr/local/share/docker-init.sh; \
     fi \
