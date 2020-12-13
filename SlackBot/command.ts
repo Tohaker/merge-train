@@ -1,4 +1,10 @@
-import { AckFn, RespondArguments, SayFn, SlashCommand } from '@slack/bolt';
+import {
+  AckFn,
+  RespondArguments,
+  RespondFn,
+  SayFn,
+  SlashCommand,
+} from '@slack/bolt';
 
 enum CommandType {
   ADD = 'add',
@@ -10,11 +16,12 @@ enum CommandType {
 
 type Props = {
   command: SlashCommand;
+  respond: RespondFn;
   ack: AckFn<string | RespondArguments>;
   say: SayFn;
 };
 
-export const parseCommand = async ({ command, ack, say }: Props) => {
+export const parseCommand = async ({ command, respond, ack, say }: Props) => {
   const { text } = command;
   const commandType = text.split(' ')[0];
   const url = text.split(' ')[1];
@@ -22,8 +29,8 @@ export const parseCommand = async ({ command, ack, say }: Props) => {
   await ack();
 
   if ((<any>Object).values(CommandType).includes(commandType)) {
-    await say({
-      reply_broadcast: false,
+    await respond({
+      response_type: 'ephemeral',
       text:
         "Sorry, this command is invalid. Valid commands are 'add, next, list, pop, clear'",
     });
