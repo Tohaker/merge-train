@@ -64,7 +64,7 @@ resource "azurerm_function_app" "function" {
 }
 
 resource "azurerm_application_insights" "insights" {
-  name                = "${azurerm_function_app.function.name}-appinsights"
+  name                = "${var.prefix}-${var.environment}-appinsights"
   location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
   application_type    = "Node.JS"
