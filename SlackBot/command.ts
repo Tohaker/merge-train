@@ -24,12 +24,13 @@ type Props = {
 };
 
 const helpText =
-  'How to use the Merge Train Slack Bot: \
-* `/merge add <github URL>` - Add a URL to the merge train. \
-* `/merge next` - Display the next URL in the list. This will not remove it from the list. \
-* `/merge list` - Display all URLs in the list, in the order they were added. \
-* `/merge pop` - Remove the last URL from the list and display it. \
-* `/merge clear` - Clear the entire list. The list will be displayed before it clears in case this action is performed accidentally.';
+  'How to use the Merge Train Slack Bot:\n \
+* `/merge add <github URL>` - Add a URL to the merge train.\n \
+* `/merge next` - Display the next URL in the list. This will not remove it from the list.\n \
+* `/merge list` - Display all URLs in the list, in the order they were added.\n \
+* `/merge pop` - Remove the last URL from the list and display it.\n \
+* `/merge clear` - Clear the entire list. The list will be displayed before it clears in case this action is performed accidentally.\n \
+* `/merge help` - Display this message again.';
 
 const createMarkdownList = (items: any[]) =>
   items.reduce((prev, current, i) => prev + `${i + 1}. ${current.url}\n`, '');
@@ -77,7 +78,7 @@ export const parseCommand = async ({
     case CommandType.ADD:
       try {
         await createItem(container, url);
-        await sendMessage(`Added ${url} to list.`);
+        await sendMessage(`Added ${url} to list :page_with_curl:`);
       } catch (e) {
         await sendEphemeralMessage(
           "Sorry, this couldn't be added to the list. Tell Miles and maybe he can work out why."
@@ -85,17 +86,24 @@ export const parseCommand = async ({
       }
       break;
     case CommandType.NEXT:
-      await sendMessage(`Next PR: ${items[0].url}`);
+      await sendMessage(`Next PR :arrow-right: ${items[0].url}`);
       break;
     case CommandType.LIST:
-      await sendMessage(createMarkdownList(items));
+      if (items.length)
+        await sendMessage(
+          `Current list :page_with_curl:\n ${createMarkdownList(items)}`
+        );
+      else
+        await sendMessage(
+          'The list is empty - that deserves a treat :doughnut:'
+        );
       break;
     case CommandType.POP:
       try {
         const next = items[0];
         await deleteItem(container, next.id);
         await sendMessage(
-          `Next PR: ${next.url} \nThis has now been removed from the list.`
+          `Next PR :arrow-right: ${next.url} \nThis has now been removed from the list :page_with_curl:`
         );
       } catch (e) {
         await sendEphemeralMessage(
@@ -109,7 +117,7 @@ export const parseCommand = async ({
           items.map(async ({ id }) => await deleteItem(container, id))
         );
         await sendMessage(
-          `List has been purged. Here's what was in it:\n${createMarkdownList(
+          `List has been purged :page_with_curl: \nHere's what was in it:\n${createMarkdownList(
             items
           )}`
         );
