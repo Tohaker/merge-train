@@ -14,14 +14,11 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
     app.command("/merge", async ({command, ack, say}) => {
         await ack();
 
-        await say(`You asked me to ${command.text}`)
+        await say(`You asked me to ${command.text}`);
     })
 
     const body = await receiver.requestHandler(req)
-    context.res = {
-        // status: 200, /* Defaults to 200 */
-        body
-    };
+    context.log(body);
 };
 
 export default httpTrigger;
