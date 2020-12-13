@@ -34,7 +34,6 @@ resource "azurerm_app_service_plan" "serviceplan" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
   kind                = "FunctionApp"
-  reserved            = true
 
   sku {
     tier = "Free"
@@ -50,7 +49,6 @@ resource "azurerm_function_app" "function" {
   storage_account_name       = azurerm_storage_account.storage.name
   storage_account_access_key = azurerm_storage_account.storage.primary_access_key
   version                    = "~3"
-  os_type                    = "linux"
 
   app_settings = {
     https_only                   = true
