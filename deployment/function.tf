@@ -60,6 +60,10 @@ resource "azurerm_function_app" "function" {
     APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.insights.instrumentation_key
     SLACK_BOT_TOKEN                = var.slack_bot_token
     SLACK_SIGNING_SECRET           = var.slack_signing_secret
+    COSMOS_ENDPOINT                = azurerm_cosmosdb_account.db.endpoint
+    COSMOS_PRIMARY_KEY             = azurerm_cosmosdb_account.db.primary_key
+    COSMOS_DATABASE_ID             = azurerm_cosmosdb_sql_database.sqldb.id
+    COSMOS_CONTAINER_ID            = azurerm_cosmosdb_sql_container.sqlcontainer.id
   }
 }
 

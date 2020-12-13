@@ -12,6 +12,7 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
+    "@azure/cosmos": "^3.9.3",
     "@azure/functions": "^1.2.2",
     "@slack/bolt": "^2.5.0",
     "bolt-azure-functions-receiver": "0.0.2",
