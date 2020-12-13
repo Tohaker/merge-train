@@ -19,14 +19,16 @@ export const parseCommand = async ({ command, ack, say }: Props) => {
   const commandType = text.split(' ')[0];
   const url = text.split(' ')[1];
 
+  await ack();
+
   if ((<any>Object).values(CommandType).includes(commandType)) {
-    await ack({
-      response_type: 'ephemeral',
+    await say({
+      reply_broadcast: false,
       text:
         "Sorry, this command is invalid. Valid commands are 'add, next, list, pop, clear'",
     });
-  } else {
-    await ack();
+
+    return;
   }
 
   switch (commandType) {
