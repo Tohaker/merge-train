@@ -37,8 +37,7 @@ export const parseCommand = async ({
   await ack();
 
   context.log(`Command: ${commandType}`);
-  if ((<any>Object).values(CommandType).includes(commandType)) {
-    context.log('Error occured');
+  if (!(<any>Object).values(CommandType).includes(commandType)) {
     await respond({
       response_type: 'ephemeral',
       text:
