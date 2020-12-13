@@ -61,3 +61,10 @@ resource "azurerm_function_app" "function" {
     SLACK_SIGNING_SECRET         = var.slack_signing_secret
   }
 }
+
+resource "azurerm_application_insights" "insights" {
+  name                = "${azurerm_function_app.function.name}-appinsights"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  application_type    = "Node.JS"
+}
