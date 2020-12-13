@@ -23,6 +23,14 @@ variable "filename" {
   default = "functionapp.zip"
 }
 
+variable "slack_bot_token" {
+  type = string
+}
+
+variable "slack_signing_secret" {
+  type = string
+}
+
 resource "random_string" "storage_name" {
   length  = 24
   upper   = false

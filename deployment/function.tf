@@ -34,6 +34,8 @@ resource "azurerm_app_service_plan" "serviceplan" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
   kind                = "FunctionApp"
+  reserved            = true
+
   sku {
     tier = "Free"
     size = "F1"
@@ -48,6 +50,7 @@ resource "azurerm_function_app" "function" {
   storage_account_name       = azurerm_storage_account.storage.name
   storage_account_access_key = azurerm_storage_account.storage.primary_access_key
   version                    = "~3"
+  os_type                    = "linux"
 
   app_settings = {
     https_only                   = true
@@ -56,5 +59,7 @@ resource "azurerm_function_app" "function" {
     FUNCTION_APP_EDIT_MODE       = "readonly"
     HASH                         = base64encode(filesha256(var.functionapp))
     WEBSITE_RUN_FROM_PACKAGE     = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.deployments.name}/${azurerm_storage_blob.functioncode.name}${data.azurerm_storage_account_sas.sas.sas}"
+    SLACK_BOT_TOKEN              = var.slack_bot_token
+    SLACK_SIGNING_SECRET         = var.slack_signing_secret
   }
 }

@@ -41,9 +41,11 @@ jobs:
       - name: Apply terraform
         run: |
           cd deployment
-          terraform apply -auto-approve
+          terraform apply -auto-approve -var="slack_bot_token=$SLACK_BOT_TOKEN" -var="slack_signing_secret=$SLACK_SIGNING_SECRET"
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
