@@ -19,7 +19,6 @@ type Props = {
   command: SlashCommand;
   context: Context;
   respond: RespondFn;
-  ack: AckFn<string | RespondArguments>;
   say: SayFn;
 };
 
@@ -27,14 +26,11 @@ export const parseCommand = async ({
   command,
   context,
   respond,
-  ack,
   say,
 }: Props) => {
   const { text } = command;
   const commandType = text.split(' ')[0];
   const url = text.split(' ')[1];
-
-  await ack();
 
   context.log(`Command: ${commandType}`);
   if (!(<any>Object).values(CommandType).includes(commandType)) {

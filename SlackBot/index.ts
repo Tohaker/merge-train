@@ -16,7 +16,8 @@ const httpTrigger: AzureFunction = async function (
   });
 
   app.command('/merge', async ({ command, respond, ack, say }) => {
-    await parseCommand({ command, context, respond, ack, say });
+    await ack();
+    await parseCommand({ command, context, respond, say });
   });
 
   const body = await receiver.requestHandler(req);
