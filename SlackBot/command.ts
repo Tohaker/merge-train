@@ -78,7 +78,7 @@ export const parseCommand = async ({
     case CommandType.ADD:
       try {
         await createItem(container, url);
-        await sendMessage(`Added ${url} to list :page_with_curl:`);
+        await sendMessage(`Added ${url} to list 📃`);
       } catch (e) {
         await sendEphemeralMessage(
           "Sorry, this couldn't be added to the list. Tell Miles and maybe he can work out why."
@@ -86,24 +86,19 @@ export const parseCommand = async ({
       }
       break;
     case CommandType.NEXT:
-      await sendMessage(`Next PR :arrow-right: ${items[0].url}`);
+      await sendMessage(`Next PR ➡ ${items[0].url}`);
       break;
     case CommandType.LIST:
       if (items.length)
-        await sendMessage(
-          `Current list :page_with_curl:\n ${createMarkdownList(items)}`
-        );
-      else
-        await sendMessage(
-          'The list is empty - that deserves a treat :doughnut:'
-        );
+        await sendMessage(`Current list 📃\n ${createMarkdownList(items)}`);
+      else await sendMessage('The list is empty - that deserves a treat 🍩');
       break;
     case CommandType.POP:
       try {
         const next = items[0];
         await deleteItem(container, next.id);
         await sendMessage(
-          `Next PR :arrow-right: ${next.url} \nThis has now been removed from the list :page_with_curl:`
+          `Next PR ➡ ${next.url} \nThis has now been removed from the list 📃`
         );
       } catch (e) {
         await sendEphemeralMessage(
@@ -117,7 +112,7 @@ export const parseCommand = async ({
           items.map(async ({ id }) => await deleteItem(container, id))
         );
         await sendMessage(
-          `List has been purged :page_with_curl: \nHere's what was in it:\n${createMarkdownList(
+          `List has been purged 📃 \nHere's what was in it:\n${createMarkdownList(
             items
           )}`
         );
