@@ -9,7 +9,7 @@
     "watch": "tsc -w",
     "prestart": "npm run build",
     "start": "func start",
-    "test": "jest"
+    "test": "jest --watch"
   },
   "dependencies": {
     "@azure/cosmos": "^3.9.3",
