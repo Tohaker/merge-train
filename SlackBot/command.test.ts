@@ -129,7 +129,20 @@ describe('Parse Command', () => {
       });
 
       expect(mockConnectToCosmos).toBeCalled();
-      expect(mockSay).toBeCalledWith(blocks('list success'));
+      expect(mockRespond).toBeCalledWith(response('list success'));
+    });
+
+    describe('given the list is empty', () => {
+      it('should send a message that the list is empty', async () => {
+        mockReadAllItems.mockResolvedValueOnce([]);
+        await parseCommand({
+          command: { text: 'list' },
+          context: { log: jest.fn() },
+          respond: mockRespond,
+          say: mockSay,
+        });
+        expect(mockRespond).toBeCalledWith(response('list empty'));
+      });
     });
   });
 

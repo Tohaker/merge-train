@@ -90,8 +90,8 @@ export const parseCommand = async ({
       break;
     case CommandType.LIST:
       if (items.length)
-        await sendMessage(listSuccess(createMarkdownList(items)));
-      else await sendMessage(listEmpty);
+        await sendEphemeralMessage(listSuccess(createMarkdownList(items)));
+      else await sendEphemeralMessage(listEmpty);
       break;
     case CommandType.UNSHIFT:
       try {
