@@ -25,7 +25,7 @@ jobs:
           npm run build
 
       - name: Test App
-        run: npm run test
+        run: npm run test:ci
 
       - name: Package App
         run: |
