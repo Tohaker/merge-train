@@ -2,8 +2,7 @@ name: Deployment
 
 on:
   push:
-    branches:
-      main
+    branches: main
 
 jobs:
   build:
@@ -11,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up NodeJS 
+      - name: Set up NodeJS
         uses: actions/setup-node@v2-beta
         with:
           node-version: '14'
@@ -25,12 +24,15 @@ jobs:
           npm i
           npm run build
 
+      - name: Test App
+        run: npm run test
+
       - name: Package App
         run: |
           npm ci --only=prod
           npm i -g @ffflorian/jszip-cli mkdirp
           npm run build:zip
-        
+
       - name: Initialise terraform
         run: |
           cd deployment
