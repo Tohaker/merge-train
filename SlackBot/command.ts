@@ -6,12 +6,25 @@ import {
   deleteItem,
   readAllItems,
 } from './cosmos';
+import {
+  helpText,
+  invalidCommand,
+  addSuccess,
+  addError,
+  nextSuccess,
+  listEmpty,
+  listSuccess,
+  unshiftSuccess,
+  unshiftError,
+  clearError,
+  clearSuccess,
+} from './constants';
 
 enum CommandType {
   ADD = 'add',
   NEXT = 'next',
   LIST = 'list',
-  POP = 'pop',
+  UNSHIFT = 'unshift',
   CLEAR = 'clear',
   HELP = 'help',
 }
@@ -22,15 +35,6 @@ type Props = {
   respond: RespondFn;
   say: SayFn;
 };
-
-const helpText =
-  'How to use the Merge Train Slack Bot:\n \
-* `/merge add <github URL>` - Add a URL to the merge train.\n \
-* `/merge next` - Display the next URL in the list. This will not remove it from the list.\n \
-* `/merge list` - Display all URLs in the list, in the order they were added.\n \
-* `/merge pop` - Remove the last URL from the list and display it.\n \
-* `/merge clear` - Clear the entire list. The list will be displayed before it clears in case this action is performed accidentally.\n \
-* `/merge help` - Display this message again.';
 
 const createMarkdownList = (items: any[]) =>
   items.reduce((prev, current, i) => prev + `${i + 1}. ${current.url}\n`, '');
@@ -64,9 +68,7 @@ export const parseCommand = async ({
 
   context.log(`Command: ${commandType}`);
   if (!(<any>Object).values(CommandType).includes(commandType)) {
-    await sendEphemeralMessage(
-      'Sorry, this command is invalid. Valid commands are `add` | `next` | `list`| `pop` | `clear`'
-    );
+    await sendEphemeralMessage(invalidCommand);
 
     return;
   }
@@ -78,32 +80,26 @@ export const parseCommand = async ({
     case CommandType.ADD:
       try {
         await createItem(container, url);
-        await sendMessage(`Added ${url} to list 📃`);
+        await sendMessage(addSuccess(url));
       } catch (e) {
-        await sendEphemeralMessage(
-          "Sorry, this couldn't be added to the list. Tell Miles and maybe he can work out why."
-        );
+        await sendEphemeralMessage(addError);
       }
       break;
     case CommandType.NEXT:
-      await sendMessage(`Next PR ➡ ${items[0].url}`);
+      await sendMessage(nextSuccess(items[0].url));
       break;
     case CommandType.LIST:
       if (items.length)
-        await sendMessage(`Current list 📃\n ${createMarkdownList(items)}`);
-      else await sendMessage('The list is empty - that deserves a treat 🍩');
+        await sendMessage(listSuccess(createMarkdownList(items)));
+      else await sendMessage(listEmpty);
       break;
-    case CommandType.POP:
+    case CommandType.UNSHIFT:
       try {
         const next = items[0];
         await deleteItem(container, next.id);
-        await sendMessage(
-          `Next PR ➡ ${next.url} \nThis has now been removed from the list 📃`
-        );
+        await sendMessage(unshiftSuccess(next.url));
       } catch (e) {
-        await sendEphemeralMessage(
-          `Sorry, this couldn't be removed from the list. Tell Miles and maybe he can work out why.\n Here's what I found anyway: ${items[0].url}`
-        );
+        await sendEphemeralMessage(unshiftError(items[0].url));
       }
       break;
     case CommandType.CLEAR:
@@ -111,15 +107,9 @@ export const parseCommand = async ({
         await Promise.all(
           items.map(async ({ id }) => await deleteItem(container, id))
         );
-        await sendMessage(
-          `List has been purged 📃 \nHere's what was in it:\n${createMarkdownList(
-            items
-          )}`
-        );
+        await sendMessage(clearSuccess(createMarkdownList(items)));
       } catch (e) {
-        await sendEphemeralMessage(
-          "Sorry, the list couldn't be cleared. Tell Miles and maybe he can work out why."
-        );
+        await sendEphemeralMessage(clearError);
       }
       break;
     case CommandType.HELP:
