@@ -14,8 +14,8 @@ import {
   nextSuccess,
   listEmpty,
   listSuccess,
-  popSuccess,
-  popError,
+  unshiftSuccess,
+  unshiftError,
   clearError,
   clearSuccess,
 } from './constants';
@@ -24,7 +24,7 @@ enum CommandType {
   ADD = 'add',
   NEXT = 'next',
   LIST = 'list',
-  POP = 'pop',
+  UNSHIFT = 'unshift',
   CLEAR = 'clear',
   HELP = 'help',
 }
@@ -93,13 +93,13 @@ export const parseCommand = async ({
         await sendMessage(listSuccess(createMarkdownList(items)));
       else await sendMessage(listEmpty);
       break;
-    case CommandType.POP:
+    case CommandType.UNSHIFT:
       try {
         const next = items[0];
         await deleteItem(container, next.id);
-        await sendMessage(popSuccess(next.url));
+        await sendMessage(unshiftSuccess(next.url));
       } catch (e) {
-        await sendEphemeralMessage(popError(items[0].url));
+        await sendEphemeralMessage(unshiftError(items[0].url));
       }
       break;
     case CommandType.CLEAR:

@@ -1,6 +1,9 @@
 describe('Parse Command', () => {
   const mockContainer = {};
-  const mockItems = [{ url: 'http://url.1' }, { url: 'http://url.2' }];
+  const mockItems = [
+    { url: 'http://url.1', id: '1' },
+    { url: 'http://url.2', id: '2' },
+  ];
 
   const mockConnectToCosmos = jest.fn().mockReturnValue(mockContainer);
   const mockCreateItem = jest.fn();
@@ -26,15 +29,15 @@ describe('Parse Command', () => {
     jest.mock('./constants', () => ({
       helpText: 'help',
       invalidCommand: 'invalid',
-      addSuccess: (url) => 'add success',
+      addSuccess: () => 'add success',
       addError: 'add error',
-      nextSuccess: (url) => 'next success',
+      nextSuccess: () => 'next success',
       listEmpty: 'list empty',
-      listSuccess: (list) => 'list success',
-      popSuccess: (url) => 'pop success',
-      popError: (url) => 'pop error',
+      listSuccess: () => 'list success',
+      unshiftSuccess: () => 'unshift success',
+      unshiftError: () => 'unshift error',
       clearError: 'clear error',
-      clearSuccess: (list) => 'clear success',
+      clearSuccess: () => 'clear success',
     }));
 
     parseCommand = require('./command').parseCommand;
@@ -113,6 +116,96 @@ describe('Parse Command', () => {
       expect(mockConnectToCosmos).toBeCalled();
       expect(mockSay).toBeCalledWith(blocks('next success'));
       expect(mockRespond).not.toBeCalled();
+    });
+  });
+
+  describe('given the list command is sent', () => {
+    it('should send a message with the entire list', async () => {
+      await parseCommand({
+        command: { text: 'list' },
+        context: { log: jest.fn() },
+        respond: mockRespond,
+        say: mockSay,
+      });
+
+      expect(mockConnectToCosmos).toBeCalled();
+      expect(mockSay).toBeCalledWith(blocks('list success'));
+    });
+  });
+
+  describe('given the unshift command is sent', () => {
+    describe('given the delete is successful', () => {
+      it('should delete the first item', async () => {
+        await parseCommand({
+          command: { text: 'unshift' },
+          context: { log: jest.fn() },
+          respond: mockRespond,
+          say: mockSay,
+        });
+
+        expect(mockDeleteItem).toBeCalledWith(mockContainer, '1');
+        expect(mockSay).toBeCalledWith(blocks('unshift success'));
+      });
+    });
+
+    describe('given the delete is unsuccessful', () => {
+      it('should delete the first item', async () => {
+        mockDeleteItem.mockRejectedValueOnce(false);
+        await parseCommand({
+          command: { text: 'unshift' },
+          context: { log: jest.fn() },
+          respond: mockRespond,
+          say: mockSay,
+        });
+
+        expect(mockDeleteItem).toBeCalledWith(mockContainer, '1');
+        expect(mockRespond).toBeCalledWith(response('unshift error'));
+      });
+    });
+  });
+
+  describe('given the clear command is sent', () => {
+    describe('given the delete commands are successful', () => {
+      it('should delete all items', async () => {
+        await parseCommand({
+          command: { text: 'clear' },
+          context: { log: jest.fn() },
+          respond: mockRespond,
+          say: mockSay,
+        });
+
+        expect(mockDeleteItem).toBeCalledTimes(2);
+        expect(mockDeleteItem).toBeCalledWith(mockContainer, '1');
+        expect(mockDeleteItem).toBeCalledWith(mockContainer, '2');
+        expect(mockSay).toBeCalledWith(blocks('clear success'));
+      });
+    });
+
+    describe('given the delete commands are unsuccessful', () => {
+      it('should delete all items', async () => {
+        mockDeleteItem.mockRejectedValue(false);
+        await parseCommand({
+          command: { text: 'clear' },
+          context: { log: jest.fn() },
+          respond: mockRespond,
+          say: mockSay,
+        });
+
+        expect(mockRespond).toBeCalledWith(response('clear error'));
+      });
+    });
+  });
+
+  describe('given the help command is sent', () => {
+    it('should send the ephemeral message', async () => {
+      await parseCommand({
+        command: { text: 'help' },
+        context: { log: jest.fn() },
+        respond: mockRespond,
+        say: mockSay,
+      });
+
+      expect(mockRespond).toBeCalledWith(response('help'));
     });
   });
 });
