@@ -2,7 +2,7 @@ export const helpText =
   'How to use the Merge Train Slack Bot:\n \
 * `/merge add <github URL>` - Add a URL to the merge train.\n \
 * `/merge next` - Display the next URL in the list. This will not remove it from the list.\n \
-* `/merge list` - Display all URLs in the list, in the order they were added.\n \
+* `/merge list (public)` - Display all URLs in the list, in the order they were added. Add `public` to share this list with the channel.\n \
 * `/merge unshift` - Remove the last URL from the list and display it.\n \
 * `/merge clear` - Clear the entire list. The list will be displayed before it clears in case this action is performed accidentally.\n \
 * `/merge help` - Display this message again.';
