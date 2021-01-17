@@ -120,28 +120,57 @@ describe('Parse Command', () => {
   });
 
   describe('given the list command is sent', () => {
-    it('should send a message with the entire list', async () => {
-      await parseCommand({
-        command: { text: 'list' },
-        context: { log: jest.fn() },
-        respond: mockRespond,
-        say: mockSay,
-      });
-
-      expect(mockConnectToCosmos).toBeCalled();
-      expect(mockRespond).toBeCalledWith(response('list success'));
-    });
-
-    describe('given the list is empty', () => {
-      it('should send a message that the list is empty', async () => {
-        mockReadAllItems.mockResolvedValueOnce([]);
+    describe('given a private list is requested', () => {
+      it('should send a message with the entire list', async () => {
         await parseCommand({
           command: { text: 'list' },
           context: { log: jest.fn() },
           respond: mockRespond,
           say: mockSay,
         });
-        expect(mockRespond).toBeCalledWith(response('list empty'));
+
+        expect(mockConnectToCosmos).toBeCalled();
+        expect(mockRespond).toBeCalledWith(response('list success'));
+      });
+
+      describe('given the list is empty', () => {
+        it('should send a message that the list is empty', async () => {
+          mockReadAllItems.mockResolvedValueOnce([]);
+          await parseCommand({
+            command: { text: 'list' },
+            context: { log: jest.fn() },
+            respond: mockRespond,
+            say: mockSay,
+          });
+          expect(mockRespond).toBeCalledWith(response('list empty'));
+        });
+      });
+    });
+
+    describe('given a public list is requested', () => {
+      it('should send a message with the entire list', async () => {
+        await parseCommand({
+          command: { text: 'list public' },
+          context: { log: jest.fn() },
+          respond: mockRespond,
+          say: mockSay,
+        });
+
+        expect(mockConnectToCosmos).toBeCalled();
+        expect(mockSay).toBeCalledWith(blocks('list success'));
+      });
+
+      describe('given the list is empty', () => {
+        it('should send a message that the list is empty', async () => {
+          mockReadAllItems.mockResolvedValueOnce([]);
+          await parseCommand({
+            command: { text: 'list public' },
+            context: { log: jest.fn() },
+            respond: mockRespond,
+            say: mockSay,
+          });
+          expect(mockSay).toBeCalledWith(blocks('list empty'));
+        });
       });
     });
   });

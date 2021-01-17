@@ -89,9 +89,11 @@ export const parseCommand = async ({
       await sendMessage(nextSuccess(items[0].url));
       break;
     case CommandType.LIST:
-      if (items.length)
-        await sendEphemeralMessage(listSuccess(createMarkdownList(items)));
-      else await sendEphemeralMessage(listEmpty);
+      const isPublic = text.split(' ')[1] === 'public';
+      const send = isPublic ? sendMessage : sendEphemeralMessage;
+
+      if (items.length) await send(listSuccess(createMarkdownList(items)));
+      else await send(listEmpty);
       break;
     case CommandType.UNSHIFT:
       try {
