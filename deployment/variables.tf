@@ -13,14 +13,14 @@ variable "location" {
   default = "uksouth"
 }
 
-variable "functionapp" {
+variable "slackapp" {
   type    = string
-  default = "../build/functionapp.zip"
+  default = "../build/slackapp.zip"
 }
 
-variable "filename" {
+variable "slackapp_filename" {
   type    = string
-  default = "functionapp.zip"
+  default = "slackapp.zip"
 }
 
 variable "slack_bot_token" {

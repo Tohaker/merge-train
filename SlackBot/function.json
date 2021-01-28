@@ -15,5 +15,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/SlackBot/index.js"
+  "scriptFile": "index.js"
 }

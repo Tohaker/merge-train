@@ -18,7 +18,7 @@ resource "azurerm_storage_container" "deployments" {
 }
 
 resource "azurerm_storage_blob" "functioncode" {
-  name                   = var.filename
+  name                   = var.slackapp_filename
   storage_account_name   = azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.deployments.name
   type                   = "Block"

@@ -55,7 +55,7 @@ resource "azurerm_function_app" "function" {
     FUNCTIONS_WORKER_RUNTIME       = "node"
     WEBSITE_NODE_DEFAULT_VERSION   = "~14"
     FUNCTION_APP_EDIT_MODE         = "readonly"
-    HASH                           = base64encode(filesha256(var.functionapp))
+    HASH                           = base64encode(filesha256(var.slackapp))
     WEBSITE_RUN_FROM_PACKAGE       = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.deployments.name}/${azurerm_storage_blob.functioncode.name}${data.azurerm_storage_account_sas.sas.sas}"
     APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.insights.instrumentation_key
     SLACK_BOT_TOKEN                = var.slack_bot_token
