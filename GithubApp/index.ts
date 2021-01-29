@@ -51,6 +51,13 @@ const httpTrigger: AzureFunction = async function (
     sender: Sender;
   } = req.body;
 
+  context.log({
+    action,
+    pull_request,
+    label,
+    sender,
+  });
+
   if (label.name.toLowerCase().includes("merge")) {
     if (action === "labeled") {
       const blocks = [
