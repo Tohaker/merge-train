@@ -118,7 +118,7 @@ const httpTrigger: AzureFunction = async function (
           context.log("Error creating item: ", e);
         }
       }
-    } else if (action === "unlabled") {
+    } else if (action === "unlabeled") {
       const blocks = [
         {
           type: "section",
