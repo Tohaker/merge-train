@@ -33,10 +33,12 @@ const httpTrigger: AzureFunction = async function (
       .update(req.rawBody)
       .digest("hex");
 
-    console.log("received signature:", receivedSignature[1]);
-    console.log("calc:", calculatedSignature);
-    console.log("calcRaw:", calculatedSignatureRaw);
-  } catch (e) {}
+    context.log("received signature:", receivedSignature[1]);
+    context.log("calc:", calculatedSignature);
+    context.log("calcRaw:", calculatedSignatureRaw);
+  } catch (e) {
+    context.log(e);
+  }
 
   const {
     action,
@@ -50,40 +52,45 @@ const httpTrigger: AzureFunction = async function (
     sender: Sender;
   } = req.body;
 
+  context.log({
+    action,
+    pull_request,
+    label,
+    sender,
+  });
+
   if (action === "labeled") {
-    const blocks = {
-      blocks: [
-        {
-          type: "section",
-          text: {
+    const blocks = [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `A new PR is ready to merge:\n*<${pull_request.html_url}|${pull_request.title}>*`,
+        },
+      },
+      {
+        type: "section",
+        fields: [
+          {
             type: "mrkdwn",
-            text: `A new PR is ready to merge:\n*<${pull_request.html_url}|${pull_request.title}>*`,
+            text: `*Opened by:*\n${sender.login}`,
           },
-        },
-        {
-          type: "section",
-          fields: [
-            {
-              type: "mrkdwn",
-              text: `*Opened by:*\n${sender.login}`,
-            },
-            {
-              type: "mrkdwn",
-              text: `*When:*\n${new Date(
-                pull_request.created_at
-              ).toDateString()}`,
-            },
-          ],
-        },
-        {
-          type: "section",
-          text: {
+          {
             type: "mrkdwn",
-            text: "This has now been added to the list :page_with_curl:",
+            text: `*When:*\n${new Date(
+              pull_request.created_at
+            ).toDateString()}`,
           },
+        ],
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "This has now been added to the list :page_with_curl:",
         },
-      ],
-    };
+      },
+    ];
 
     fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
