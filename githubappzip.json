@@ -3,6 +3,7 @@
     "dereferenceLinks": true,
     "entries": [
         "dist/GithubApp",
+        "dist/common",
         "GithubApp",
         "node_modules",
         "host.json",

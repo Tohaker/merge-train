@@ -3,6 +3,7 @@
     "dereferenceLinks": true,
     "entries": [
         "dist/SlackBot",
+        "dist/common",
         "SlackBot",
         "node_modules",
         "host.json",

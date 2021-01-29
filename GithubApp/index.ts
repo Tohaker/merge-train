@@ -1,6 +1,7 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import crypto from "crypto";
 import fetch from "node-fetch";
+import { connectToCosmos, createItem, readAllItems } from "../common/cosmos";
 
 type PullRequest = {
   html_url: string;
@@ -21,17 +22,15 @@ const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
-  try {
-    const receivedSignature = req.headers["x-hub-signature"].split("=");
-    const calculatedSignatureRaw = crypto
-      .createHmac(receivedSignature[0], process.env.GHAPP_SECRET)
-      .update(req.rawBody)
-      .digest("hex");
+  const receivedSignature = req.headers["x-hub-signature"].split("=");
+  const calculatedSignatureRaw = crypto
+    .createHmac(receivedSignature[0], process.env.GHAPP_SECRET)
+    .update(req.rawBody)
+    .digest("hex");
 
-    context.log("received signature:", receivedSignature[1]);
-    context.log("calcRaw:", calculatedSignatureRaw);
-  } catch (e) {
-    context.log(e);
+  if (calculatedSignatureRaw !== receivedSignature[1]) {
+    context.log.warn("Hash signature doesn't match - terminating session");
+    return;
   }
 
   const {
@@ -46,14 +45,7 @@ const httpTrigger: AzureFunction = async function (
     sender: Sender;
   } = req.body;
 
-  context.log({
-    action,
-    pull_request,
-    label,
-    sender,
-  });
-
-  if (action === "labeled") {
+  if (action === "labeled" && label.name.toLowerCase().includes("merge")) {
     const blocks = [
       {
         type: "section",
@@ -86,18 +78,32 @@ const httpTrigger: AzureFunction = async function (
       },
     ];
 
-    fetch("https://slack.com/api/chat.postMessage", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        channel: "C015KE3RXGB",
-        icon_url: sender.avatar_url,
-        blocks,
-      }),
-    });
+    const container = connectToCosmos();
+    const items = await readAllItems(container);
+
+    if (items.some(({ url }) => url === pull_request.html_url)) {
+      context.log.info(`PR (${pull_request.html_url}) already saved`);
+      return;
+    } else {
+      try {
+        await createItem(container, pull_request.html_url);
+
+        await fetch("https://slack.com/api/chat.postMessage", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            channel: "C015KE3RXGB",
+            icon_emoji: ":steam_locomotive:",
+            blocks,
+          }),
+        });
+      } catch (e) {
+        context.log.warn("Error creating item: ", e);
+      }
+    }
   }
 };
 
