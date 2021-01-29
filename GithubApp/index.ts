@@ -1,55 +1,27 @@
-import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import crypto from "crypto";
-import fetch from "node-fetch";
+import { AzureFunction, Context, HttpRequest } from '@azure/functions';
+import { checkSignature } from './checkSignature';
+import { postMessage, createSlackPanel, listConversations } from './slackApi';
+import { RequestBody, Action } from './types';
 import {
   connectToCosmos,
   createItem,
   deleteItem,
   readAllItems,
-} from "../common/cosmos";
+} from '../common/cosmos';
 
-type PullRequest = {
-  html_url: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-};
-
-type Label = {
-  name: string;
-};
-
-type Sender = {
-  login: string;
-  avatar_url: string;
-};
-
-const httpTrigger: AzureFunction = async function (
+const httpTrigger: AzureFunction = async (
   context: Context,
   req: HttpRequest
-): Promise<void> {
-  const receivedSignature = req.headers["x-hub-signature"].split("=");
-  const calculatedSignatureRaw = crypto
-    .createHmac(receivedSignature[0], process.env.GHAPP_SECRET)
-    .update(req.rawBody)
-    .digest("hex");
-
-  if (calculatedSignatureRaw !== receivedSignature[1]) {
+): Promise<void> => {
+  if (!checkSignature(req)) {
     context.log("Hash signature doesn't match - terminating session");
     return;
   }
 
-  const {
-    action,
-    pull_request,
-    label,
-    sender,
-  }: {
-    action: string;
-    pull_request: PullRequest;
-    label: Label;
-    sender: Sender;
-  } = req.body;
+  const channels: Record<string, string> = (
+    await listConversations()
+  ).channels.reduce((acc, channel) => (acc[channel.name] = channel.id), {});
+  const { action, pull_request, label, sender }: RequestBody = req.body;
 
   context.log({
     action,
@@ -58,126 +30,79 @@ const httpTrigger: AzureFunction = async function (
     sender,
   });
 
-  if (label.name.toLowerCase().includes("merge")) {
-    if (action === "labeled") {
-      const blocks = [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `A new PR is ready to merge:\n*<${pull_request.html_url}|${pull_request.title}>*`,
-          },
-        },
-        {
-          type: "section",
-          fields: [
-            {
-              type: "mrkdwn",
-              text: `*Changed by:*\n${sender.login}`,
-            },
-            {
-              type: "mrkdwn",
-              text: `*When:*\n${new Date(
-                pull_request.created_at
-              ).toDateString()}`,
-            },
-          ],
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "This has now been added to the list :page_with_curl:",
-          },
-        },
-      ];
+  const labelName = label.name.toLowerCase();
+  const container = connectToCosmos();
+  const items = await readAllItems(container);
 
-      const container = connectToCosmos();
-      const items = await readAllItems(container);
+  switch (action) {
+    case Action.LABELED: {
+      if (labelName.includes('merge')) {
+        const channel = channels['merge'];
 
-      if (items.some(({ url }) => url === pull_request.html_url)) {
-        context.log(`PR (${pull_request.html_url}) already saved`);
-        return;
-      } else {
-        try {
-          await createItem(container, pull_request.html_url);
+        const blocks = createSlackPanel({
+          headline: 'A new PR is ready to merge',
+          footer: 'This has now been added to the list :page_with_curl:',
+          pull_request,
+          sender,
+          changed: true,
+        });
 
-          await fetch("https://slack.com/api/chat.postMessage", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              channel: "C015KE3RXGB",
-              icon_emoji: ":steam_locomotive:",
-              blocks,
-            }),
-          });
-        } catch (e) {
-          context.log("Error creating item: ", e);
-        }
-      }
-    } else if (action === "unlabeled") {
-      const blocks = [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: `A PR has had its status changed:\n*<${pull_request.html_url}|${pull_request.title}>*`,
-          },
-        },
-        {
-          type: "section",
-          fields: [
-            {
-              type: "mrkdwn",
-              text: `*Changed by:*\n${sender.login}`,
-            },
-            {
-              type: "mrkdwn",
-              text: `*When:*\n${new Date(
-                pull_request.updated_at
-              ).toDateString()}`,
-            },
-          ],
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "This has now been removed to the list :page_with_curl:",
-          },
-        },
-      ];
-
-      const container = connectToCosmos();
-      const items = await readAllItems(container);
-
-      try {
-        const id = items.find(({ url }) => url === pull_request.html_url)?.id;
-        if (id) {
-          await deleteItem(container, id);
-
-          await fetch("https://slack.com/api/chat.postMessage", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              channel: "C015KE3RXGB",
-              icon_emoji: ":steam_locomotive:",
-              blocks,
-            }),
-          });
+        if (items.some(({ url }) => url === pull_request.html_url)) {
+          context.log(`PR (${pull_request.html_url}) already saved`);
         } else {
-          context.log("No ID found for this url");
+          try {
+            await createItem(container, pull_request.html_url);
+            await postMessage(blocks, channel);
+          } catch (e) {
+            context.log('Error creating item: ', e);
+          }
         }
-      } catch (e) {
-        context.log("Error creating item: ", e);
       }
+      break;
     }
+    case Action.UNLABELED: {
+      if (labelName.includes('merge')) {
+        const channel = channels['merge'];
+
+        const blocks = createSlackPanel({
+          headline: 'A PR has had its status changed',
+          footer: 'This has now been removed to the list :page_with_curl:',
+          pull_request,
+          sender,
+          changed: true,
+        });
+
+        try {
+          const id = items.find(({ url }) => url === pull_request.html_url)?.id;
+          if (id) {
+            await deleteItem(container, id);
+            await postMessage(blocks, channel);
+          } else {
+            context.log('No ID found for this url');
+          }
+        } catch (e) {
+          context.log('Error creating item: ', e);
+        }
+      }
+      break;
+    }
+    case Action.REVIEW_REQUESTED: {
+      const channel = channels['reviews'];
+      const reviewers = pull_request.requested_reviewers.reduce(
+        (acc, user) => (acc += `${user.login} `),
+        ''
+      );
+      const blocks = createSlackPanel({
+        headline: 'A PR has been marked for review',
+        footer: `The following people have been assigned: ${reviewers}`,
+        pull_request,
+        sender,
+      });
+      await postMessage(blocks, channel);
+      break;
+    }
+    default:
+      break;
   }
 };
 
