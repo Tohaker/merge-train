@@ -42,7 +42,7 @@ resource "azurerm_app_service_plan" "serviceplan" {
 }
 
 resource "azurerm_function_app" "slackapp_function" {
-  name                       = "${var.prefix}-${var.environment}"
+  name                       = "${var.prefix}-slack-${var.environment}"
   location                   = var.location
   resource_group_name        = azurerm_resource_group.rg.name
   app_service_plan_id        = azurerm_app_service_plan.serviceplan.id
@@ -68,7 +68,7 @@ resource "azurerm_function_app" "slackapp_function" {
 }
 
 resource "azurerm_function_app" "githubapp_function" {
-  name                       = "${var.prefix}-${var.environment}"
+  name                       = "${var.prefix}-github-${var.environment}"
   location                   = var.location
   resource_group_name        = azurerm_resource_group.rg.name
   app_service_plan_id        = azurerm_app_service_plan.serviceplan.id
