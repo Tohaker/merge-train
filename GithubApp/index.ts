@@ -35,7 +35,7 @@ const httpTrigger: AzureFunction = async function (
     .digest("hex");
 
   if (calculatedSignatureRaw !== receivedSignature[1]) {
-    context.log.warn("Hash signature doesn't match - terminating session");
+    context.log("Hash signature doesn't match - terminating session");
     return;
   }
 
@@ -89,7 +89,7 @@ const httpTrigger: AzureFunction = async function (
       const items = await readAllItems(container);
 
       if (items.some(({ url }) => url === pull_request.html_url)) {
-        context.log.info(`PR (${pull_request.html_url}) already saved`);
+        context.log(`PR (${pull_request.html_url}) already saved`);
         return;
       } else {
         try {
@@ -108,7 +108,7 @@ const httpTrigger: AzureFunction = async function (
             }),
           });
         } catch (e) {
-          context.log.warn("Error creating item: ", e);
+          context.log("Error creating item: ", e);
         }
       }
     } else if (action === "unlabled") {
@@ -165,10 +165,10 @@ const httpTrigger: AzureFunction = async function (
             }),
           });
         } else {
-          context.log.warn("No ID found for this url");
+          context.log("No ID found for this url");
         }
       } catch (e) {
-        context.log.warn("Error creating item: ", e);
+        context.log("Error creating item: ", e);
       }
     }
   }
