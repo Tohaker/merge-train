@@ -1,5 +1,5 @@
-import { Container, CosmosClient } from '@azure/cosmos';
-import config from './config';
+import { Container, CosmosClient } from "@azure/cosmos";
+import config from "./config";
 
 export const connectToCosmos = () => {
   const { endpoint, key, databaseId, containerId } = config;
@@ -16,7 +16,7 @@ export const connectToCosmos = () => {
 
 export const readAllItems = async (container: Container) => {
   const querySpec = {
-    query: 'SELECT * from c',
+    query: "SELECT * from c",
   };
 
   const { resources: items } = await container.items
