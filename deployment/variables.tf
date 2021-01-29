@@ -41,6 +41,10 @@ variable "slack_signing_secret" {
   type = string
 }
 
+variable "github_signature" {
+  type = string
+}
+
 resource "random_string" "storage_name" {
   length  = 24
   upper   = false

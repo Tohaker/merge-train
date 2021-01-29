@@ -85,7 +85,7 @@ resource "azurerm_function_app" "githubapp_function" {
     WEBSITE_RUN_FROM_PACKAGE       = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.deployments.name}/${azurerm_storage_blob.githubapp_functioncode.name}${data.azurerm_storage_account_sas.sas.sas}"
     APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.insights.instrumentation_key
     SLACK_BOT_TOKEN                = var.slack_bot_token
-    SLACK_SIGNING_SECRET           = var.slack_signing_secret
+    GHAPP_SECRET                   = var.github_signature
     COSMOS_ENDPOINT                = azurerm_cosmosdb_account.db.endpoint
     COSMOS_PRIMARY_KEY             = azurerm_cosmosdb_account.db.primary_key
     COSMOS_DATABASE_ID             = azurerm_cosmosdb_sql_database.sqldb.name

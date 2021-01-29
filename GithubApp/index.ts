@@ -22,20 +22,21 @@ const httpTrigger: AzureFunction = async function (
   req: HttpRequest
 ): Promise<void> {
   context.log("Body:", req.body);
+  try {
+    const receivedSignature = req.headers["x-hub-signature"].split("=");
+    const calculatedSignature = crypto
+      .createHmac(receivedSignature[0], process.env.GHAPP_SECRET)
+      .update(req.body)
+      .digest("hex");
+    const calculatedSignatureRaw = crypto
+      .createHmac(receivedSignature[0], process.env.GHAPP_SECRET)
+      .update(req.rawBody)
+      .digest("hex");
 
-  const receivedSignature = req.headers["x-hub-signature"].split("=");
-  const calculatedSignature = crypto
-    .createHmac(receivedSignature[0], receivedSignature[1])
-    .update(req.body)
-    .digest("hex");
-  const calculatedSignatureRaw = crypto
-    .createHmac(receivedSignature[0], receivedSignature[1])
-    .update(req.rawBody)
-    .digest("hex");
-
-  console.log("received signature:", receivedSignature[1]);
-  console.log("calc:", calculatedSignature);
-  console.log("calcRaw:", calculatedSignatureRaw);
+    console.log("received signature:", receivedSignature[1]);
+    console.log("calc:", calculatedSignature);
+    console.log("calcRaw:", calculatedSignatureRaw);
+  } catch (e) {}
 
   const {
     action,
