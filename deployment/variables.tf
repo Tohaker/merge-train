@@ -13,6 +13,16 @@ variable "location" {
   default = "uksouth"
 }
 
+variable "githubapp" {
+  type    = string
+  default = "../build/githubapp.zip"
+}
+
+variable "githubapp_filename" {
+  type    = string
+  default = "githubapp.zip"
+}
+
 variable "slackapp" {
   type    = string
   default = "../build/slackapp.zip"

@@ -2,7 +2,7 @@
     "compressionLevel": 9,
     "dereferenceLinks": true,
     "entries": [
-        "dist",
+        "dist/GithubApp",
         "GithubApp",
         "node_modules",
         "host.json",

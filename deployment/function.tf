@@ -41,7 +41,7 @@ resource "azurerm_app_service_plan" "serviceplan" {
   }
 }
 
-resource "azurerm_function_app" "function" {
+resource "azurerm_function_app" "slackapp_function" {
   name                       = "${var.prefix}-${var.environment}"
   location                   = var.location
   resource_group_name        = azurerm_resource_group.rg.name
@@ -56,7 +56,33 @@ resource "azurerm_function_app" "function" {
     WEBSITE_NODE_DEFAULT_VERSION   = "~14"
     FUNCTION_APP_EDIT_MODE         = "readonly"
     HASH                           = base64encode(filesha256(var.slackapp))
-    WEBSITE_RUN_FROM_PACKAGE       = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.deployments.name}/${azurerm_storage_blob.functioncode.name}${data.azurerm_storage_account_sas.sas.sas}"
+    WEBSITE_RUN_FROM_PACKAGE       = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.deployments.name}/${azurerm_storage_blob.slackapp_functioncode.name}${data.azurerm_storage_account_sas.sas.sas}"
+    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.insights.instrumentation_key
+    SLACK_BOT_TOKEN                = var.slack_bot_token
+    SLACK_SIGNING_SECRET           = var.slack_signing_secret
+    COSMOS_ENDPOINT                = azurerm_cosmosdb_account.db.endpoint
+    COSMOS_PRIMARY_KEY             = azurerm_cosmosdb_account.db.primary_key
+    COSMOS_DATABASE_ID             = azurerm_cosmosdb_sql_database.sqldb.name
+    COSMOS_CONTAINER_ID            = azurerm_cosmosdb_sql_container.sqlcontainer.name
+  }
+}
+
+resource "azurerm_function_app" "githubapp_function" {
+  name                       = "${var.prefix}-${var.environment}"
+  location                   = var.location
+  resource_group_name        = azurerm_resource_group.rg.name
+  app_service_plan_id        = azurerm_app_service_plan.serviceplan.id
+  storage_account_name       = azurerm_storage_account.storage.name
+  storage_account_access_key = azurerm_storage_account.storage.primary_access_key
+  version                    = "~3"
+
+  app_settings = {
+    https_only                     = true
+    FUNCTIONS_WORKER_RUNTIME       = "node"
+    WEBSITE_NODE_DEFAULT_VERSION   = "~14"
+    FUNCTION_APP_EDIT_MODE         = "readonly"
+    HASH                           = base64encode(filesha256(var.githubapp))
+    WEBSITE_RUN_FROM_PACKAGE       = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.deployments.name}/${azurerm_storage_blob.githubapp_functioncode.name}${data.azurerm_storage_account_sas.sas.sas}"
     APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.insights.instrumentation_key
     SLACK_BOT_TOKEN                = var.slack_bot_token
     SLACK_SIGNING_SECRET           = var.slack_signing_secret
