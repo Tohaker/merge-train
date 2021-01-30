@@ -1,7 +1,7 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions';
 import { checkSignature } from './checkSignature';
 import { postMessage, createSlackPanel, listConversations } from './slackApi';
-import { RequestBody, Action, Channel } from './types';
+import { RequestBody, Action, Conversation } from './types';
 import {
   connectToCosmos,
   createItem,
@@ -18,10 +18,11 @@ const httpTrigger: AzureFunction = async (
     return;
   }
 
-  const channels: Record<string, string> = (
-    await listConversations()
-  ).channels.reduce(
-    (acc, channel: Channel) => (acc[channel.name] = channel.id),
+  const channels: Record<
+    string,
+    string
+  > = ((await listConversations()) as Conversation).channels.reduce(
+    (acc, channel) => (acc[channel.name] = channel.id),
     {}
   );
   const { action, pull_request, label, sender }: RequestBody = req.body;
