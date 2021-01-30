@@ -1,6 +1,8 @@
 describe('Slack APIs', () => {
   let slackApi;
-  const mockFetch = jest.fn();
+  const mockFetch = jest
+    .fn()
+    .mockResolvedValue({ json: jest.fn().mockResolvedValue({ data: true }) });
 
   beforeEach(() => {
     jest.mock('node-fetch', () => mockFetch);
