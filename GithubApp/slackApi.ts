@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { Block } from '@slack/bolt';
-import { PanelData } from './types';
+import { Conversation, PanelData } from './types';
 
 export const postMessage = (blocks: Block[], channel: string) =>
   fetch('https://slack.com/api/chat.postMessage', {
@@ -23,7 +23,9 @@ export const listConversations = () =>
       Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-  });
+  })
+    .then((response) => response.json())
+    .then((data: Conversation) => data);
 
 export const createSlackPanel = ({
   footer,

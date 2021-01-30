@@ -18,13 +18,9 @@ const httpTrigger: AzureFunction = async (
     return;
   }
 
-  const channels: Record<
-    string,
-    string
-  > = ((await listConversations()) as Conversation).channels.reduce(
-    (acc, channel) => (acc[channel.name] = channel.id),
-    {}
-  );
+  const channels: Record<string, string> = (
+    await listConversations()
+  ).channels.reduce((acc, channel) => (acc[channel.name] = channel.id), {});
   const { action, pull_request, label, sender }: RequestBody = req.body;
 
   context.log({
