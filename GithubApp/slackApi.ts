@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { Block } from '@slack/bolt';
-import { Conversation, PanelData } from './types';
+import { PanelData } from './types';
 
 export const postMessage = (blocks: Block[], channel: string) =>
   fetch('https://slack.com/api/chat.postMessage', {
@@ -16,7 +16,7 @@ export const postMessage = (blocks: Block[], channel: string) =>
     }),
   });
 
-export const listConversations = (): Promise<Conversation> =>
+export const listConversations = () =>
   fetch('https://slack.com/api/conversations.list', {
     method: 'GET',
     headers: {
