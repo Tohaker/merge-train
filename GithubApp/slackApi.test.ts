@@ -33,112 +33,126 @@ describe('Slack APIs', () => {
         }
       );
     });
+  });
 
-    describe('List Conversations', () => {
-      it('should get conversations', () => {
-        slackApi.listConversations();
+  describe('List Conversations', () => {
+    it('should get conversations', () => {
+      slackApi.listConversations();
 
-        expect(mockFetch).toBeCalledWith(
-          'https://slack.com/api/conversations.list',
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer mockToken`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-          }
-        );
+      expect(mockFetch).toBeCalledWith(
+        'https://slack.com/api/conversations.list',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer mockToken`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        }
+      );
+    });
+  });
+
+  describe('List Users', () => {
+    it('should get users', () => {
+      slackApi.listUsers();
+
+      expect(mockFetch).toBeCalledWith('https://slack.com/api/users.list', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer mockToken`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
       });
     });
+  });
 
-    describe('Create Slack Panel', () => {
-      const pull_request = {
-        html_url: 'pr url',
-        title: 'mock title',
-        updated_at: '2021-01-29T20:00:00Z',
-      };
-      const sender = {
-        login: 'username',
-      };
+  describe('Create Slack Panel', () => {
+    const pull_request = {
+      html_url: 'pr url',
+      title: 'mock title',
+      updated_at: '2021-01-29T20:00:00Z',
+    };
+    const sender = {
+      login: 'username',
+    };
 
-      it('should create a slack panel for a change', () => {
-        expect(
-          slackApi.createSlackPanel({
-            footer: 'mock footer',
-            headline: 'mock headline',
-            pull_request,
-            sender,
-            changed: true,
-          })
-        ).toEqual([
-          {
-            type: 'section',
-            text: {
+    it('should create a slack panel for a change', () => {
+      expect(
+        slackApi.createSlackPanel({
+          footer: 'mock footer',
+          headline: 'mock headline',
+          pull_request,
+          sender,
+          changed: true,
+        })
+      ).toEqual([
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'mock headline:\n*<pr url|mock title>*',
+          },
+        },
+        {
+          type: 'section',
+          fields: [
+            {
               type: 'mrkdwn',
-              text: 'mock headline:\n*<pr url|mock title>*',
+              text: '*Changed by:*\nusername',
             },
-          },
-          {
-            type: 'section',
-            fields: [
-              {
-                type: 'mrkdwn',
-                text: '*Changed by:*\nusername',
-              },
-              {
-                type: 'mrkdwn',
-                text: '*When:*\n29/01/2021, 20:00:00',
-              },
-            ],
-          },
-          {
-            type: 'section',
-            text: {
+            {
               type: 'mrkdwn',
-              text: 'mock footer',
+              text: '*When:*\n29/01/2021, 20:00:00',
             },
+          ],
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'mock footer',
           },
-        ]);
-      });
+        },
+      ]);
+    });
 
-      it('should create a slack panel for a creation', () => {
-        expect(
-          slackApi.createSlackPanel({
-            footer: 'mock footer',
-            headline: 'mock headline',
-            pull_request,
-            sender,
-          })
-        ).toEqual([
-          {
-            type: 'section',
-            text: {
+    it('should create a slack panel for a creation', () => {
+      expect(
+        slackApi.createSlackPanel({
+          footer: 'mock footer',
+          headline: 'mock headline',
+          pull_request,
+          sender,
+        })
+      ).toEqual([
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'mock headline:\n*<pr url|mock title>*',
+          },
+        },
+        {
+          type: 'section',
+          fields: [
+            {
               type: 'mrkdwn',
-              text: 'mock headline:\n*<pr url|mock title>*',
+              text: '*Created by:*\nusername',
             },
-          },
-          {
-            type: 'section',
-            fields: [
-              {
-                type: 'mrkdwn',
-                text: '*Created by:*\nusername',
-              },
-              {
-                type: 'mrkdwn',
-                text: '*When:*\n29/01/2021, 20:00:00',
-              },
-            ],
-          },
-          {
-            type: 'section',
-            text: {
+            {
               type: 'mrkdwn',
-              text: 'mock footer',
+              text: '*When:*\n29/01/2021, 20:00:00',
             },
+          ],
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'mock footer',
           },
-        ]);
-      });
+        },
+      ]);
     });
   });
 });

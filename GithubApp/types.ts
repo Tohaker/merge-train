@@ -33,6 +33,21 @@ export type Conversation = {
   channels: Channel[];
 };
 
+type SlackUser = {
+  id: string;
+  name: string;
+  real_name: string;
+  profile: {
+    title: string;
+    display_name: string;
+  };
+};
+
+export type SlackUserList = {
+  ok: boolean;
+  members: SlackUser[];
+};
+
 export type RequestBody = {
   action: string;
   pull_request: PullRequest;
