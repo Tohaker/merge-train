@@ -33,7 +33,7 @@ const httpTrigger: AzureFunction = async (
     sender,
   });
 
-  const labelName = label.name.toLowerCase();
+  const labelName = label?.name.toLowerCase();
   const container = connectToCosmos();
   const items = await readAllItems(container);
 
