@@ -1,38 +1,38 @@
-import fetch from 'node-fetch';
-import { Block } from '@slack/bolt';
-import { Conversation, PanelData, SlackUserList } from './types';
+import fetch from "node-fetch";
+import { Block } from "@slack/bolt";
+import { Conversation, PanelData, SlackUserList } from "./types";
 
 export const postMessage = (blocks: Block[], channel: string) =>
-  fetch('https://slack.com/api/chat.postMessage', {
-    method: 'POST',
+  fetch("https://slack.com/api/chat.postMessage", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      icon_emoji: ':steam_locomotive:',
+      icon_emoji: ":steam_locomotive:",
       channel,
       blocks,
     }),
   });
 
 export const listConversations = () =>
-  fetch('https://slack.com/api/conversations.list', {
-    method: 'GET',
+  fetch("https://slack.com/api/conversations.list", {
+    method: "GET",
     headers: {
       Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
+      "Content-Type": "application/x-www-form-urlencoded",
     },
   })
     .then((response) => response.json())
     .then((data: Conversation) => data);
 
 export const listUsers = () =>
-  fetch('https://slack.com/api/users.list', {
-    method: 'GET',
+  fetch("https://slack.com/api/users.list", {
+    method: "GET",
     headers: {
       Authorization: `Bearer ${process.env.SLACK_BOT_TOKEN}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
+      "Content-Type": "application/x-www-form-urlencoded",
     },
   })
     .then((response) => response.json())
@@ -42,38 +42,36 @@ export const createSlackPanel = ({
   footer,
   headline,
   pull_request,
-  sender,
+  tag,
   changed,
 }: PanelData) => {
   return [
     {
-      type: 'section',
+      type: "section",
       text: {
-        type: 'mrkdwn',
+        type: "mrkdwn",
         text: `${headline}:\n*<${pull_request.html_url}|${pull_request.title}>*`,
       },
     },
     {
-      type: 'section',
+      type: "section",
       fields: [
         {
-          type: 'mrkdwn',
-          text: `${changed ? '*Changed by:*' : '*Created by:*'}\n${
-            sender.login
-          }`,
+          type: "mrkdwn",
+          text: `${changed ? "*Changed by:*" : "*Created by:*"}\n${tag}`,
         },
         {
-          type: 'mrkdwn',
+          type: "mrkdwn",
           text: `*When:*\n${new Date(pull_request.updated_at).toLocaleString(
-            'en-GB'
+            "en-GB"
           )}`,
         },
       ],
     },
     {
-      type: 'section',
+      type: "section",
       text: {
-        type: 'mrkdwn',
+        type: "mrkdwn",
         text: footer,
       },
     },

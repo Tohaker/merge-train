@@ -19,7 +19,7 @@ export type PanelData = {
   footer: string;
   headline: string;
   pull_request: PullRequest;
-  sender: User;
+  tag: string;
   changed?: boolean;
 };
 
@@ -56,7 +56,7 @@ export type RequestBody = {
 };
 
 export enum Action {
-  LABELED = 'labeled',
-  UNLABELED = 'unlabeled',
-  REVIEW_REQUESTED = 'review_requested',
+  LABELED = "labeled",
+  UNLABELED = "unlabeled",
+  REVIEW_REQUESTED = "review_requested",
 }
