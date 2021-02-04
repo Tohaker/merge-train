@@ -122,7 +122,7 @@ const httpTrigger: AzureFunction = async (
         pull_request,
         tag: await createAssignmentText([sender]),
       });
-      await postMessage(blocks, channel);
+      // await postMessage(blocks, channel);
       break;
     }
     default:
