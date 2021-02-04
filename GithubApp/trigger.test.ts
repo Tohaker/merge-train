@@ -232,10 +232,8 @@ describe("HTTP Trigger", () => {
 
           it("should post a message to the reviews channel", async () => {
             mockCreateSlackPanel.mockReturnValueOnce("blocks");
-            await httpTrigger(mockContext, {
-              ...mockRequest,
-              requested_team: { name: "some team" },
-            });
+            mockRequest.body["requested_team"] = { name: "some team" };
+            await httpTrigger(mockContext, mockRequest);
 
             expect(mockCreateSlackPanel).toBeCalledWith({
               headline: "A PR has been marked for review",
@@ -244,6 +242,7 @@ describe("HTTP Trigger", () => {
               tag: "<@id2>",
             });
             expect(mockPostMessage).toBeCalledWith("blocks", "4567");
+            delete mockRequest.body["requested_team"];
           });
         });
 
@@ -269,10 +268,9 @@ describe("HTTP Trigger", () => {
 
           it("should post a message to the reviews channel", async () => {
             mockCreateSlackPanel.mockReturnValueOnce("blocks");
-            await httpTrigger(mockContext, {
-              ...mockRequest,
-              requested_team: { name: "some team" },
-            });
+            mockRequest.body["requested_team"] = { name: "some team" };
+
+            await httpTrigger(mockContext, mockRequest);
 
             expect(mockCreateSlackPanel).toBeCalledWith({
               headline: "A PR has been marked for review",
@@ -281,6 +279,7 @@ describe("HTTP Trigger", () => {
               tag: "username2",
             });
             expect(mockPostMessage).toBeCalledWith("blocks", "4567");
+            delete mockRequest.body["requested_team"];
           });
         });
       });

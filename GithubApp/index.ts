@@ -113,7 +113,7 @@ const httpTrigger: AzureFunction = async (
     }
     case Action.REVIEW_REQUESTED: {
       // This prevents duplicates of the same review posts
-      if (req.hasOwnProperty("requested_team")) {
+      if (req.body.hasOwnProperty("requested_team")) {
         const channel = channels["reviews"];
         const reviewers = await createAssignmentText(
           pull_request.requested_reviewers
