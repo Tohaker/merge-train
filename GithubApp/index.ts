@@ -112,17 +112,20 @@ const httpTrigger: AzureFunction = async (
       break;
     }
     case Action.REVIEW_REQUESTED: {
-      const channel = channels["reviews"];
-      const reviewers = await createAssignmentText(
-        pull_request.requested_reviewers
-      );
-      const blocks = createSlackPanel({
-        headline: "A PR has been marked for review",
-        footer: `The following people have been assigned: ${reviewers}`,
-        pull_request,
-        tag: await createAssignmentText([sender]),
-      });
-      // await postMessage(blocks, channel);
+      // This prevents duplicates of the same review posts
+      if (req.hasOwnProperty("requested_team")) {
+        const channel = channels["reviews"];
+        const reviewers = await createAssignmentText(
+          pull_request.requested_reviewers
+        );
+        const blocks = createSlackPanel({
+          headline: "A PR has been marked for review",
+          footer: `The following people have been assigned: ${reviewers}`,
+          pull_request,
+          tag: await createAssignmentText([sender]),
+        });
+        await postMessage(blocks, channel);
+      }
       break;
     }
     default:

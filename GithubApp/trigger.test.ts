@@ -199,73 +199,89 @@ describe("HTTP Trigger", () => {
         mockRequest.body.action = "review_requested";
       });
 
-      describe("given the slack profiles have the title property", () => {
-        beforeEach(() => {
-          mockListUsers.mockResolvedValue({
-            members: [
-              {
-                id: "id1",
-                profile: {
-                  title: "username",
-                  display_name: "some person",
-                },
-              },
-              {
-                id: "id2",
-                profile: {
-                  title: "username2",
-                  display_name: "some other person",
-                },
-              },
-            ],
-          });
-        });
-
-        it("should post a message to the reviews channel", async () => {
-          mockCreateSlackPanel.mockReturnValueOnce("blocks");
+      describe("given the request does not have a requested_team", () => {
+        it("should not post a message to slack", async () => {
           await httpTrigger(mockContext, mockRequest);
 
-          expect(mockCreateSlackPanel).toBeCalledWith({
-            headline: "A PR has been marked for review",
-            footer: `The following people have been assigned: <@id1> <@id2>`,
-            pull_request: mockRequest.body.pull_request,
-            tag: "<@id2>",
-          });
-          // expect(mockPostMessage).toBeCalledWith("blocks", "4567");
+          expect(mockPostMessage).not.toBeCalled();
         });
       });
 
-      describe("given the slack profiles do not have the title property", () => {
-        beforeEach(() => {
-          mockListUsers.mockResolvedValue({
-            members: [
-              {
-                id: "id1",
-                profile: {
-                  display_name: "some person",
+      describe("given the request has a requested_team", () => {
+        describe("given the slack profiles have the title property", () => {
+          beforeEach(() => {
+            mockListUsers.mockResolvedValue({
+              members: [
+                {
+                  id: "id1",
+                  profile: {
+                    title: "username",
+                    display_name: "some person",
+                  },
                 },
-              },
-              {
-                id: "id2",
-                profile: {
-                  display_name: "some other person",
+                {
+                  id: "id2",
+                  profile: {
+                    title: "username2",
+                    display_name: "some other person",
+                  },
                 },
-              },
-            ],
+              ],
+            });
+          });
+
+          it("should post a message to the reviews channel", async () => {
+            mockCreateSlackPanel.mockReturnValueOnce("blocks");
+            await httpTrigger(mockContext, {
+              ...mockRequest,
+              requested_team: { name: "some team" },
+            });
+
+            expect(mockCreateSlackPanel).toBeCalledWith({
+              headline: "A PR has been marked for review",
+              footer: `The following people have been assigned: <@id1> <@id2>`,
+              pull_request: mockRequest.body.pull_request,
+              tag: "<@id2>",
+            });
+            expect(mockPostMessage).toBeCalledWith("blocks", "4567");
           });
         });
 
-        it("should post a message to the reviews channel", async () => {
-          mockCreateSlackPanel.mockReturnValueOnce("blocks");
-          await httpTrigger(mockContext, mockRequest);
-
-          expect(mockCreateSlackPanel).toBeCalledWith({
-            headline: "A PR has been marked for review",
-            footer: `The following people have been assigned: username username2`,
-            pull_request: mockRequest.body.pull_request,
-            tag: "username2",
+        describe("given the slack profiles do not have the title property", () => {
+          beforeEach(() => {
+            mockListUsers.mockResolvedValue({
+              members: [
+                {
+                  id: "id1",
+                  profile: {
+                    display_name: "some person",
+                  },
+                },
+                {
+                  id: "id2",
+                  profile: {
+                    display_name: "some other person",
+                  },
+                },
+              ],
+            });
           });
-          // expect(mockPostMessage).toBeCalledWith("blocks", "4567");
+
+          it("should post a message to the reviews channel", async () => {
+            mockCreateSlackPanel.mockReturnValueOnce("blocks");
+            await httpTrigger(mockContext, {
+              ...mockRequest,
+              requested_team: { name: "some team" },
+            });
+
+            expect(mockCreateSlackPanel).toBeCalledWith({
+              headline: "A PR has been marked for review",
+              footer: `The following people have been assigned: username username2`,
+              pull_request: mockRequest.body.pull_request,
+              tag: "username2",
+            });
+            expect(mockPostMessage).toBeCalledWith("blocks", "4567");
+          });
         });
       });
     });

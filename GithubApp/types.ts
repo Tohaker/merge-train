@@ -15,6 +15,10 @@ export type User = {
   avatar_url: string;
 };
 
+export type RequestedTeam = {
+  name: "string";
+};
+
 export type PanelData = {
   footer: string;
   headline: string;
@@ -53,6 +57,7 @@ export type RequestBody = {
   pull_request: PullRequest;
   label: Label;
   sender: User;
+  requested_team?: RequestedTeam;
 };
 
 export enum Action {
