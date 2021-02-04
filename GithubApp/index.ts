@@ -23,7 +23,7 @@ const createAssignmentText = async (reviewers: User[]) => {
         (slackUser) => slackUser.profile.title === user.login
       );
       if (slackUser?.id) {
-        return acc + `<@${slackUser.id}|${slackUser.profile.display_name}> `;
+        return acc + `<@${slackUser.id}> `;
       } else {
         return acc + `${user.login} `;
       }

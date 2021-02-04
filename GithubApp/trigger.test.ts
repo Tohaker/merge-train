@@ -227,9 +227,9 @@ describe("HTTP Trigger", () => {
 
           expect(mockCreateSlackPanel).toBeCalledWith({
             headline: "A PR has been marked for review",
-            footer: `The following people have been assigned: <@id1|some person> <@id2|some other person>`,
+            footer: `The following people have been assigned: <@id1> <@id2>`,
             pull_request: mockRequest.body.pull_request,
-            tag: "<@id2|some other person>",
+            tag: "<@id2>",
           });
           // expect(mockPostMessage).toBeCalledWith("blocks", "4567");
         });
