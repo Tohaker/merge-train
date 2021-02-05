@@ -1,5 +1,9 @@
 # Merge Train
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![Actions Status](https://github.com/tohaker/merge-train/workflows/Deployment/badge.svg)](https://github.com/tohaker/merge-train/actions)
+
 This project consists of Node JS Azure serverless functions that make up the Merge Train bot. These are as follows;
 
 - A function that can be invoked through a Slack Bot to keep track of a growing list of Merge requests.
