@@ -1,27 +1,43 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions';
-import { App } from '@slack/bolt';
-import { AzureFunctionsReceiver } from 'bolt-azure-functions-receiver';
+import fetch from 'node-fetch';
+import queryString from 'query-string';
 import { parseCommand } from './command';
+import { checkSignature } from './checkSignature';
+import { Body, RespondProps } from './types';
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
-  const signingSecret = process.env.SLACK_SIGNING_SECRET;
-  const receiver = new AzureFunctionsReceiver(signingSecret, context.log);
-  const app = new App({
-    token: process.env.SLACK_BOT_TOKEN,
-    signingSecret,
-    receiver,
-  });
+  const parsed = queryString.parse(req.body) as Body;
+  const respond = ({ blocks, text, response_type }: RespondProps) =>
+    fetch(parsed.response_url, {
+      method: 'POST',
+      body: JSON.stringify({
+        mrkdwn: true,
+        blocks,
+        text,
+        response_type,
+      }),
+    });
 
-  app.command('/merge', async ({ command, respond, ack, say }) => {
-    await ack();
-    await parseCommand({ command, context, respond, say });
-  });
+  if (
+    !checkSignature(
+      req.headers['x-slack-signature'],
+      `v0:${req.headers['x-slack-request-timestamp']}:${req.rawBody}`
+    )
+  ) {
+    context.log('Signature does not match');
+    context.done(null, { status: 401 });
+    return;
+  }
 
-  const body = await receiver.requestHandler(req);
-  context.log(body);
+  if (parsed.command === '/merge') {
+    const { text } = parsed;
+    await parseCommand({ text, context, respond });
+  }
+
+  context.done(null, { status: 200 });
 };
 
 export default httpTrigger;

@@ -1,5 +1,4 @@
 import { Context } from '@azure/functions';
-import { RespondFn, SayFn, SlashCommand } from '@slack/bolt';
 import {
   connectToCosmos,
   createItem,
@@ -19,6 +18,7 @@ import {
   clearError,
   clearSuccess,
 } from './constants';
+import { RespondProps } from './types';
 
 enum CommandType {
   ADD = 'add',
@@ -30,27 +30,20 @@ enum CommandType {
 }
 
 type Props = {
-  command: SlashCommand;
+  text: string;
   context: Context;
-  respond: RespondFn;
-  say: SayFn;
+  respond: (args: RespondProps) => Promise<any>;
 };
 
 const createMarkdownList = (items: any[]) =>
   items.reduce((prev, current, i) => prev + `${i + 1}. ${current.url}\n`, '');
 
-export const parseCommand = async ({
-  command,
-  context,
-  respond,
-  say,
-}: Props) => {
+export const parseCommand = async ({ text, context, respond }: Props) => {
   const sendEphemeralMessage = (text: string) =>
-    respond({ response_type: 'ephemeral', mrkdwn: true, text });
+    respond({ response_type: 'ephemeral', text });
 
   const sendMessage = (text: string) =>
-    say({
-      text: '',
+    respond({
       blocks: [
         {
           type: 'section',
@@ -60,10 +53,8 @@ export const parseCommand = async ({
           },
         },
       ],
-      icon_emoji: ':steam_locomotive:',
     });
 
-  const { text } = command;
   const commandType = text.split(' ')[0].toLowerCase();
   const url = text.split(' ')[1];
 

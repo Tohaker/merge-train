@@ -11,7 +11,6 @@ describe('Parse Command', () => {
   const mockReadAllItems = jest.fn();
 
   const mockRespond = jest.fn();
-  const mockSay = jest.fn();
 
   let parseCommand;
 
@@ -44,7 +43,6 @@ describe('Parse Command', () => {
   });
 
   const blocks = (text) => ({
-    text: '',
     blocks: [
       {
         type: 'section',
@@ -54,12 +52,10 @@ describe('Parse Command', () => {
         },
       },
     ],
-    icon_emoji: ':steam_locomotive:',
   });
 
   const response = (text) => ({
     response_type: 'ephemeral',
-    mrkdwn: true,
     text,
   });
 
@@ -71,16 +67,14 @@ describe('Parse Command', () => {
 
       it('should send a success message', async () => {
         await parseCommand({
-          command: { text: 'add http://some.url' },
+          text: 'add http://some.url',
           context: { log: jest.fn() },
           respond: mockRespond,
-          say: mockSay,
         });
 
         expect(mockConnectToCosmos).toBeCalled();
         expect(mockCreateItem).toBeCalledWith(mockContainer, 'http://some.url');
-        expect(mockSay).toBeCalledWith(blocks('add success'));
-        expect(mockRespond).not.toBeCalled();
+        expect(mockRespond).toBeCalledWith(blocks('add success'));
       });
     });
 
@@ -91,15 +85,13 @@ describe('Parse Command', () => {
 
       it('should send an error message', async () => {
         await parseCommand({
-          command: { text: 'add http://some.url' },
+          text: 'add http://some.url',
           context: { log: jest.fn() },
           respond: mockRespond,
-          say: mockSay,
         });
 
         expect(mockConnectToCosmos).toBeCalled();
         expect(mockCreateItem).toBeCalledWith(mockContainer, 'http://some.url');
-        expect(mockSay).not.toBeCalled();
         expect(mockRespond).toBeCalledWith(response('add error'));
       });
     });
@@ -108,15 +100,13 @@ describe('Parse Command', () => {
   describe('given the next command is sent', () => {
     it('should send a message with the first url', async () => {
       await parseCommand({
-        command: { text: 'next' },
+        text: 'next',
         context: { log: jest.fn() },
         respond: mockRespond,
-        say: mockSay,
       });
 
       expect(mockConnectToCosmos).toBeCalled();
-      expect(mockSay).toBeCalledWith(blocks('next success'));
-      expect(mockRespond).not.toBeCalled();
+      expect(mockRespond).toBeCalledWith(blocks('next success'));
     });
   });
 
@@ -124,10 +114,9 @@ describe('Parse Command', () => {
     describe('given a private list is requested', () => {
       it('should send a message with the entire list', async () => {
         await parseCommand({
-          command: { text: 'list' },
+          text: 'list',
           context: { log: jest.fn() },
           respond: mockRespond,
-          say: mockSay,
         });
 
         expect(mockConnectToCosmos).toBeCalled();
@@ -138,10 +127,9 @@ describe('Parse Command', () => {
         it('should send a message that the list is empty', async () => {
           mockReadAllItems.mockResolvedValueOnce([]);
           await parseCommand({
-            command: { text: 'list' },
+            text: 'list',
             context: { log: jest.fn() },
             respond: mockRespond,
-            say: mockSay,
           });
           expect(mockRespond).toBeCalledWith(response('list empty'));
         });
@@ -151,26 +139,24 @@ describe('Parse Command', () => {
     describe('given a public list is requested', () => {
       it('should send a message with the entire list', async () => {
         await parseCommand({
-          command: { text: 'list public' },
+          text: 'list public',
           context: { log: jest.fn() },
           respond: mockRespond,
-          say: mockSay,
         });
 
         expect(mockConnectToCosmos).toBeCalled();
-        expect(mockSay).toBeCalledWith(blocks('list success'));
+        expect(mockRespond).toBeCalledWith(blocks('list success'));
       });
 
       describe('given the list is empty', () => {
         it('should send a message that the list is empty', async () => {
           mockReadAllItems.mockResolvedValueOnce([]);
           await parseCommand({
-            command: { text: 'list public' },
+            text: 'list public',
             context: { log: jest.fn() },
             respond: mockRespond,
-            say: mockSay,
           });
-          expect(mockSay).toBeCalledWith(blocks('list empty'));
+          expect(mockRespond).toBeCalledWith(blocks('list empty'));
         });
       });
     });
@@ -180,14 +166,13 @@ describe('Parse Command', () => {
     describe('given the delete is successful', () => {
       it('should delete the first item', async () => {
         await parseCommand({
-          command: { text: 'unshift' },
+          text: 'unshift',
           context: { log: jest.fn() },
           respond: mockRespond,
-          say: mockSay,
         });
 
         expect(mockDeleteItem).toBeCalledWith(mockContainer, '1');
-        expect(mockSay).toBeCalledWith(blocks('unshift success'));
+        expect(mockRespond).toBeCalledWith(blocks('unshift success'));
       });
     });
 
@@ -195,10 +180,9 @@ describe('Parse Command', () => {
       it('should delete the first item', async () => {
         mockDeleteItem.mockRejectedValueOnce(false);
         await parseCommand({
-          command: { text: 'unshift' },
+          text: 'unshift',
           context: { log: jest.fn() },
           respond: mockRespond,
-          say: mockSay,
         });
 
         expect(mockDeleteItem).toBeCalledWith(mockContainer, '1');
@@ -211,16 +195,15 @@ describe('Parse Command', () => {
     describe('given the delete commands are successful', () => {
       it('should delete all items', async () => {
         await parseCommand({
-          command: { text: 'clear' },
+          text: 'clear',
           context: { log: jest.fn() },
           respond: mockRespond,
-          say: mockSay,
         });
 
         expect(mockDeleteItem).toBeCalledTimes(2);
         expect(mockDeleteItem).toBeCalledWith(mockContainer, '1');
         expect(mockDeleteItem).toBeCalledWith(mockContainer, '2');
-        expect(mockSay).toBeCalledWith(blocks('clear success'));
+        expect(mockRespond).toBeCalledWith(blocks('clear success'));
       });
     });
 
@@ -228,10 +211,9 @@ describe('Parse Command', () => {
       it('should delete all items', async () => {
         mockDeleteItem.mockRejectedValue(false);
         await parseCommand({
-          command: { text: 'clear' },
+          text: 'clear',
           context: { log: jest.fn() },
           respond: mockRespond,
-          say: mockSay,
         });
 
         expect(mockRespond).toBeCalledWith(response('clear error'));
@@ -242,10 +224,9 @@ describe('Parse Command', () => {
   describe('given the help command is sent', () => {
     it('should send the ephemeral message', async () => {
       await parseCommand({
-        command: { text: 'help' },
+        text: 'help',
         context: { log: jest.fn() },
         respond: mockRespond,
-        say: mockSay,
       });
 
       expect(mockRespond).toBeCalledWith(response('help'));
