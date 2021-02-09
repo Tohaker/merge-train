@@ -1,10 +1,10 @@
-import { Context } from '@azure/functions';
+import { Context } from "@azure/functions";
 import {
   connectToCosmos,
   createItem,
   deleteItem,
   readAllItems,
-} from '../common/cosmos';
+} from "../common/cosmos";
 import {
   helpText,
   invalidCommand,
@@ -15,18 +15,21 @@ import {
   listSuccess,
   unshiftSuccess,
   unshiftError,
+  popError,
+  popSuccess,
   clearError,
   clearSuccess,
-} from './constants';
-import { RespondProps } from './types';
+} from "./constants";
+import { RespondProps } from "./types";
 
 enum CommandType {
-  ADD = 'add',
-  NEXT = 'next',
-  LIST = 'list',
-  UNSHIFT = 'unshift',
-  CLEAR = 'clear',
-  HELP = 'help',
+  ADD = "add",
+  NEXT = "next",
+  LIST = "list",
+  UNSHIFT = "unshift",
+  POP = "pop",
+  CLEAR = "clear",
+  HELP = "help",
 }
 
 type Props = {
@@ -36,27 +39,27 @@ type Props = {
 };
 
 const createMarkdownList = (items: any[]) =>
-  items.reduce((prev, current, i) => prev + `${i + 1}. ${current.url}\n`, '');
+  items.reduce((prev, current, i) => prev + `${i + 1}. ${current.url}\n`, "");
 
 export const parseCommand = async ({ text, context, respond }: Props) => {
   const sendEphemeralMessage = (text: string) =>
-    respond({ response_type: 'ephemeral', text });
+    respond({ response_type: "ephemeral", text });
 
   const sendMessage = (text: string) =>
     respond({
       blocks: [
         {
-          type: 'section',
+          type: "section",
           text: {
-            type: 'mrkdwn',
+            type: "mrkdwn",
             text,
           },
         },
       ],
     });
 
-  const commandType = text.split(' ')[0].toLowerCase();
-  const url = text.split(' ')[1];
+  const commandType = text.split(" ")[0].toLowerCase();
+  const url = text.split(" ")[1];
 
   context.log(`Command: ${commandType}`);
   if (!(<any>Object).values(CommandType).includes(commandType)) {
@@ -81,21 +84,29 @@ export const parseCommand = async ({ text, context, respond }: Props) => {
       await sendMessage(nextSuccess(items[0].url));
       break;
     case CommandType.LIST:
-      const isPublic = text.split(' ')[1] === 'public';
+      const isPublic = text.split(" ")[1] === "public";
       const send = isPublic ? sendMessage : sendEphemeralMessage;
 
       if (items.length) await send(listSuccess(createMarkdownList(items)));
       else await send(listEmpty);
       break;
     case CommandType.UNSHIFT:
+      const next = items[0];
       try {
-        const next = items[0];
         await deleteItem(container, next.id);
         await sendMessage(unshiftSuccess(next.url));
       } catch (e) {
-        await sendEphemeralMessage(unshiftError(items[0].url));
+        await sendEphemeralMessage(unshiftError(next.url));
       }
       break;
+    case CommandType.POP:
+      const last = items[items.length - 1];
+      try {
+        await deleteItem(container, last.id);
+        await sendMessage(popSuccess(last.url));
+      } catch (e) {
+        await sendEphemeralMessage(popError(last.url));
+      }
     case CommandType.CLEAR:
       try {
         await Promise.all(

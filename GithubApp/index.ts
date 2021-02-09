@@ -1,19 +1,19 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions';
-import { checkSignature } from './checkSignature';
+import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { checkSignature } from "./checkSignature";
 import {
   postMessage,
   createSlackPanel,
   listConversations,
   listUsers,
-} from './slackApi';
-import { RequestBody, Action, User } from './types';
-import { ChannelName } from './config';
+} from "./slackApi";
+import { RequestBody, Action, User } from "./types";
+import { ChannelName } from "./config";
 import {
   connectToCosmos,
   createItem,
   deleteItem,
   readAllItems,
-} from '../common/cosmos';
+} from "../common/cosmos";
 
 const createAssignmentText = async (reviewers: User[]) => {
   const { members } = await listUsers();
@@ -28,7 +28,7 @@ const createAssignmentText = async (reviewers: User[]) => {
       } else {
         return acc + `${user.login} `;
       }
-    }, '')
+    }, "")
     .trim();
 };
 
@@ -62,12 +62,12 @@ const httpTrigger: AzureFunction = async (
 
   switch (action) {
     case Action.LABELED: {
-      if (labelName.includes('merge')) {
+      if (labelName.includes("ready to merge")) {
         const channel = channels[ChannelName.MERGE];
 
         const blocks = createSlackPanel({
-          headline: 'A new PR is ready to merge',
-          footer: 'This has now been added to the list :page_with_curl:',
+          headline: "A new PR is ready to merge",
+          footer: "This has now been added to the list :page_with_curl:",
           pull_request,
           tag: await createAssignmentText([sender]),
           changed: true,
@@ -80,19 +80,19 @@ const httpTrigger: AzureFunction = async (
             await createItem(container, pull_request.html_url);
             await postMessage(blocks, channel);
           } catch (e) {
-            context.log('Error creating item: ', e);
+            context.log("Error creating item: ", e);
           }
         }
       }
       break;
     }
     case Action.UNLABELED: {
-      if (labelName.includes('merge')) {
+      if (labelName.includes("ready to merge")) {
         const channel = channels[ChannelName.MERGE];
 
         const blocks = createSlackPanel({
-          headline: 'A PR has had its status changed',
-          footer: 'This has now been removed to the list :page_with_curl:',
+          headline: "A PR has had its status changed",
+          footer: "This has now been removed to the list :page_with_curl:",
           pull_request,
           tag: await createAssignmentText([sender]),
           changed: true,
@@ -104,23 +104,23 @@ const httpTrigger: AzureFunction = async (
             await deleteItem(container, id);
             await postMessage(blocks, channel);
           } else {
-            context.log('No ID found for this url');
+            context.log("No ID found for this url");
           }
         } catch (e) {
-          context.log('Error creating item: ', e);
+          context.log("Error creating item: ", e);
         }
       }
       break;
     }
     case Action.REVIEW_REQUESTED: {
       // This prevents duplicates of the same review posts
-      if (req.body.hasOwnProperty('requested_team')) {
+      if (req.body.hasOwnProperty("requested_team")) {
         const channel = channels[ChannelName.REVIEWS];
         const reviewers = await createAssignmentText(
           pull_request.requested_reviewers
         );
         const blocks = createSlackPanel({
-          headline: 'A PR has been marked for review',
+          headline: "A PR has been marked for review",
           footer: `The following people have been assigned: ${reviewers}`,
           pull_request,
           tag: await createAssignmentText([sender]),
