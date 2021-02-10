@@ -60,9 +60,11 @@ const httpTrigger: AzureFunction = async (
   const container = connectToCosmos();
   const items = await readAllItems(container);
 
+  const readyForMergeLabel = "ready for merge";
+
   switch (action) {
     case Action.LABELED: {
-      if (labelName.includes("ready to merge")) {
+      if (labelName.includes(readyForMergeLabel)) {
         const channel = channels[ChannelName.MERGE];
 
         const blocks = createSlackPanel({
@@ -87,12 +89,12 @@ const httpTrigger: AzureFunction = async (
       break;
     }
     case Action.UNLABELED: {
-      if (labelName.includes("ready to merge")) {
+      if (labelName.includes(readyForMergeLabel)) {
         const channel = channels[ChannelName.MERGE];
 
         const blocks = createSlackPanel({
           headline: "A PR has had its status changed",
-          footer: "This has now been removed to the list :page_with_curl:",
+          footer: "This has now been removed from the list :page_with_curl:",
           pull_request,
           tag: await createAssignmentText([sender]),
           changed: true,

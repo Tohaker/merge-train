@@ -127,9 +127,9 @@ describe("HTTP Trigger", () => {
         mockRequest.body.action = "labeled";
       });
 
-      describe("given the label name is Ready to merge", () => {
+      describe("given the label name is Ready for merge", () => {
         beforeEach(() => {
-          mockRequest.body.label.name = "Ready to merge";
+          mockRequest.body.label.name = "Ready for merge";
         });
 
         describe("given the PR url is not in the list", () => {
@@ -186,9 +186,9 @@ describe("HTTP Trigger", () => {
         mockRequest.body.action = "unlabeled";
       });
 
-      describe("given the label name is Ready to merge", () => {
+      describe("given the label name is Ready for merge", () => {
         beforeEach(() => {
-          mockRequest.body.label.name = "Ready to merge";
+          mockRequest.body.label.name = "Ready for merge";
         });
 
         describe("given the PR url is not in the list", () => {
