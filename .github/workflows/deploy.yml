@@ -43,7 +43,8 @@ jobs:
       - name: Apply terraform
         run: |
           cd deployment
-          terraform apply -auto-approve -var="slack_bot_token=$SLACK_BOT_TOKEN" -var="slack_signing_secret=$SLACK_SIGNING_SECRET" -var="github_signature=$GHAPP_SECRET"
+          chmod +x deploy.sh
+          ./deploy.sh
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
@@ -52,3 +53,9 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           GHAPP_SECRET: ${{ secrets.GHAPP_SECRET }}
+          GHAPP_PRIVATE_KEY: ${{ secrets.GHAPP_PRIVATE_KEY }}
+          GH_APP_ID: ${{ secrets.GH_APP_ID }}
+          GH_INSTALLATION_ID: ${{ secrets.GH_INSTALLATION_ID }}
+          GH_HOSTNAME: ${{ secrets.GH_HOSTNAME }}
+          GH_OWNER: ${{ secrets.GH_OWNER }}
+          GH_REPOSITORY: ${{ secrets.GH_REPOSITORY }}

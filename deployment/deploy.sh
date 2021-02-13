@@ -1,0 +1,11 @@
+terraform apply \
+    -auto-approve \
+    -var="slack_bot_token=$SLACK_BOT_TOKEN" \
+    -var="slack_signing_secret=$SLACK_SIGNING_SECRET" \
+    -var="github_signature=$GHAPP_SECRET" \
+    -var="github_private_key=$GHAPP_PRIVATE_KEY" \
+    -var="github_app_id=$GH_APP_ID" \
+    -var="github_installation_id=$GH_INSTALLATION_ID" \
+    -var="github_hostname=$GH_HOSTNAME" \
+    -var="github_owner=$GH_OWNER" \
+    -var="github_repository=$GH_REPOSITORY"
