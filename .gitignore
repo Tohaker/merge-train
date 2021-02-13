@@ -94,8 +94,9 @@ obj
 appsettings.json
 local.settings.json
 
-# Azure secrets
+# Secrets
 service-principal.json
+*.pem
 
 # Terraform artifacts
 .terraform
