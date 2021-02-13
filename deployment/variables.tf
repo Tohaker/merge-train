@@ -45,6 +45,30 @@ variable "github_signature" {
   type = string
 }
 
+variable "github_private_key" {
+  type = string
+}
+
+variable "github_app_id" {
+  type = string
+}
+
+variable "github_installation_id" {
+  type = string
+}
+
+variable "github_hostname" {
+  type = string
+}
+
+variable "github_owner" {
+  type = string
+}
+
+variable "github_repository" {
+  type = string
+}
+
 resource "random_string" "storage_name" {
   length  = 24
   upper   = false

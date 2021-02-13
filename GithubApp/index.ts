@@ -8,12 +8,6 @@ import {
 } from "./slackApi";
 import { RequestBody, Action, User } from "./types";
 import { ChannelName } from "./config";
-import {
-  connectToCosmos,
-  createItem,
-  deleteItem,
-  readAllItems,
-} from "../common/cosmos";
 
 const createAssignmentText = async (reviewers: User[]) => {
   const { members } = await listUsers();
@@ -57,8 +51,6 @@ const httpTrigger: AzureFunction = async (
   });
 
   const labelName = label?.name.toLowerCase();
-  const container = connectToCosmos();
-  const items = await readAllItems(container);
 
   const readyForMergeLabel = "ready for merge";
 
@@ -69,22 +61,12 @@ const httpTrigger: AzureFunction = async (
 
         const blocks = createSlackPanel({
           headline: "A new PR is ready to merge",
-          footer: "This has now been added to the list :page_with_curl:",
           pull_request,
           tag: await createAssignmentText([sender]),
           changed: true,
         });
 
-        if (items.some(({ url }) => url === pull_request.html_url)) {
-          context.log(`PR (${pull_request.html_url}) already saved`);
-        } else {
-          try {
-            await createItem(container, pull_request.html_url);
-            await postMessage(blocks, channel);
-          } catch (e) {
-            context.log("Error creating item: ", e);
-          }
-        }
+        await postMessage(blocks, channel);
       }
       break;
     }
@@ -94,23 +76,12 @@ const httpTrigger: AzureFunction = async (
 
         const blocks = createSlackPanel({
           headline: "A PR has had its status changed",
-          footer: "This has now been removed from the list :page_with_curl:",
           pull_request,
           tag: await createAssignmentText([sender]),
           changed: true,
         });
 
-        try {
-          const id = items.find(({ url }) => url === pull_request.html_url)?.id;
-          if (id) {
-            await deleteItem(container, id);
-            await postMessage(blocks, channel);
-          } else {
-            context.log("No ID found for this url");
-          }
-        } catch (e) {
-          context.log("Error creating item: ", e);
-        }
+        await postMessage(blocks, channel);
       }
       break;
     }
@@ -127,6 +98,7 @@ const httpTrigger: AzureFunction = async (
           pull_request,
           tag: await createAssignmentText([sender]),
         });
+
         await postMessage(blocks, channel);
       }
       break;

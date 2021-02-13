@@ -20,7 +20,7 @@ export type RequestedTeam = {
 };
 
 export type PanelData = {
-  footer: string;
+  footer?: string;
   headline: string;
   pull_request: PullRequest;
   tag: string;

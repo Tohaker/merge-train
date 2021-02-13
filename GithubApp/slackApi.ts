@@ -45,7 +45,7 @@ export const createSlackPanel = ({
   tag,
   changed,
 }: PanelData) => {
-  return [
+  const blocks = [
     {
       type: "section",
       text: {
@@ -68,12 +68,16 @@ export const createSlackPanel = ({
         },
       ],
     },
-    {
+  ];
+
+  footer &&
+    blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
         text: footer,
       },
-    },
-  ];
+    });
+
+  return blocks;
 };

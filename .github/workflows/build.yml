@@ -1,0 +1,22 @@
+name: Build and Test
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up NodeJS
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: "14"
+
+      - name: Build App
+        run: |
+          npm i
+          npm run build
+
+      - name: Test App
+        run: npm run test:ci

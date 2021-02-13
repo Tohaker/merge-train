@@ -60,10 +60,12 @@ resource "azurerm_function_app" "slackapp_function" {
     APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.insights.instrumentation_key
     SLACK_BOT_TOKEN                = var.slack_bot_token
     SLACK_SIGNING_SECRET           = var.slack_signing_secret
-    COSMOS_ENDPOINT                = azurerm_cosmosdb_account.db.endpoint
-    COSMOS_PRIMARY_KEY             = azurerm_cosmosdb_account.db.primary_key
-    COSMOS_DATABASE_ID             = azurerm_cosmosdb_sql_database.sqldb.name
-    COSMOS_CONTAINER_ID            = azurerm_cosmosdb_sql_container.sqlcontainer.name
+    GITHUB_HOSTNAME                = var.github_hostname
+    GITHUB_OWNER                   = var.github_owner
+    GITHUB_REPOSITORY              = var.github_repository
+    GITHUB_APP_ID                  = var.github_app_id
+    GITHUB_INSTALLATION_ID         = var.github_installation_id
+    PRIVATE_KEY                    = var.github_private_key
   }
 }
 
@@ -86,10 +88,6 @@ resource "azurerm_function_app" "githubapp_function" {
     APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.insights.instrumentation_key
     SLACK_BOT_TOKEN                = var.slack_bot_token
     GHAPP_SECRET                   = var.github_signature
-    COSMOS_ENDPOINT                = azurerm_cosmosdb_account.db.endpoint
-    COSMOS_PRIMARY_KEY             = azurerm_cosmosdb_account.db.primary_key
-    COSMOS_DATABASE_ID             = azurerm_cosmosdb_sql_database.sqldb.name
-    COSMOS_CONTAINER_ID            = azurerm_cosmosdb_sql_container.sqlcontainer.name
   }
 }
 
