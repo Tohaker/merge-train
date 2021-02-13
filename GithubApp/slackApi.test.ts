@@ -150,5 +150,36 @@ describe("Slack APIs", () => {
         },
       ]);
     });
+
+    it("should create a slack panel without a footer", () => {
+      expect(
+        slackApi.createSlackPanel({
+          headline: "mock headline",
+          pull_request,
+          tag: "username",
+        })
+      ).toEqual([
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "mock headline:\n*<pr url|mock title>*",
+          },
+        },
+        {
+          type: "section",
+          fields: [
+            {
+              type: "mrkdwn",
+              text: "*Created by:*\nusername",
+            },
+            {
+              type: "mrkdwn",
+              text: "*When:*\n29/01/2021, 20:00:00",
+            },
+          ],
+        },
+      ]);
+    });
   });
 });

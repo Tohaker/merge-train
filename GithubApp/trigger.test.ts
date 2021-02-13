@@ -23,17 +23,6 @@ describe("HTTP Trigger", () => {
     listUsers: mockListUsers,
   };
 
-  const mockConnectToCosmos = jest.fn(() => ({}));
-  const mockCreateItem = jest.fn();
-  const mockDeleteItem = jest.fn();
-  const mockReadAllItems = jest.fn();
-  const mockCosmos = {
-    connectToCosmos: mockConnectToCosmos,
-    createItem: mockCreateItem,
-    deleteItem: mockDeleteItem,
-    readAllItems: mockReadAllItems,
-  };
-
   const mockContext = {
     log: jest.fn(),
   };
@@ -79,7 +68,6 @@ describe("HTTP Trigger", () => {
     jest.mock("./config", () => ({
       ChannelName,
     }));
-    jest.mock("../common/cosmos", () => mockCosmos);
 
     httpTrigger = require(".").default;
   });
@@ -132,38 +120,11 @@ describe("HTTP Trigger", () => {
           mockRequest.body.label.name = "Ready for merge";
         });
 
-        describe("given the PR url is not in the list", () => {
-          beforeEach(() => {
-            mockReadAllItems.mockResolvedValue([{ url: "some other url" }]);
-          });
+        it("should post a message", async () => {
+          mockCreateSlackPanel.mockReturnValueOnce("blocks");
+          await httpTrigger(mockContext, mockRequest);
 
-          it("should create a new item and post a message", async () => {
-            mockCreateSlackPanel.mockReturnValueOnce("blocks");
-            await httpTrigger(mockContext, mockRequest);
-
-            expect(mockCreateItem).toBeCalledWith(
-              {},
-              mockRequest.body.pull_request.html_url
-            );
-            expect(mockPostMessage).toBeCalledWith("blocks", "1234");
-          });
-        });
-
-        describe("given the PR url is in the list", () => {
-          beforeEach(() => {
-            mockReadAllItems.mockResolvedValue([{ url: "mockUrl" }]);
-          });
-
-          it("should not create a new item or post a message", async () => {
-            mockCreateSlackPanel.mockReturnValueOnce("blocks");
-            await httpTrigger(mockContext, mockRequest);
-
-            expect(mockContext.log).toBeCalledWith(
-              "PR (mockUrl) already saved"
-            );
-            expect(mockCreateItem).not.toBeCalled();
-            expect(mockPostMessage).not.toBeCalled();
-          });
+          expect(mockPostMessage).toBeCalledWith("blocks", "1234");
         });
       });
 
@@ -175,7 +136,6 @@ describe("HTTP Trigger", () => {
         it("should not delete the item or post a message", async () => {
           await httpTrigger(mockContext, mockRequest);
 
-          expect(mockDeleteItem).not.toBeCalled();
           expect(mockPostMessage).not.toBeCalled();
         });
       });
@@ -191,35 +151,11 @@ describe("HTTP Trigger", () => {
           mockRequest.body.label.name = "Ready for merge";
         });
 
-        describe("given the PR url is not in the list", () => {
-          beforeEach(() => {
-            mockReadAllItems.mockResolvedValue([
-              { url: "some other url", id: "mockId" },
-            ]);
-          });
+        it("should post a message", async () => {
+          mockCreateSlackPanel.mockReturnValueOnce("blocks");
+          await httpTrigger(mockContext, mockRequest);
 
-          it("should create a new item and post a message", async () => {
-            mockCreateSlackPanel.mockReturnValueOnce("blocks");
-            await httpTrigger(mockContext, mockRequest);
-
-            expect(mockContext.log).toBeCalledWith("No ID found for this url");
-          });
-        });
-
-        describe("given the PR url is in the list", () => {
-          beforeEach(() => {
-            mockReadAllItems.mockResolvedValue([
-              { url: mockRequest.body.pull_request.html_url, id: "mockId" },
-            ]);
-          });
-
-          it("should delete the item and post a message", async () => {
-            mockCreateSlackPanel.mockReturnValueOnce("blocks");
-            await httpTrigger(mockContext, mockRequest);
-
-            expect(mockDeleteItem).toBeCalledWith({}, "mockId");
-            expect(mockPostMessage).toBeCalledWith("blocks", "1234");
-          });
+          expect(mockPostMessage).toBeCalledWith("blocks", "1234");
         });
       });
 
@@ -231,7 +167,6 @@ describe("HTTP Trigger", () => {
         it("should not delete the item or post a message", async () => {
           await httpTrigger(mockContext, mockRequest);
 
-          expect(mockDeleteItem).not.toBeCalled();
           expect(mockPostMessage).not.toBeCalled();
         });
       });
