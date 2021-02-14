@@ -4,7 +4,6 @@ import { getAccessTokens } from "../../common/githubApi";
 
 export const createClient = async () => {
   const jwt = createJwt();
-  console.log(jwt);
   const { token } = await getAccessTokens(jwt);
   const endpoint = process.env.GITHUB_HOSTNAME
     ? `${process.env.GITHUB_HOSTNAME}/api/graphql`
