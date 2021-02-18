@@ -2,15 +2,14 @@
     "compressionLevel": 9,
     "dereferenceLinks": true,
     "entries": [
-        "dist/GithubApp",
-        "dist/common",
+        "dist",
         "node_modules",
         "host.json",
         "proxies.json"
     ],
     "force": true,
     "mode": "add",
-    "outputEntry": "build/githubapp.zip",
+    "outputEntry": "build/functions.zip",
     "quiet": false,
     "verbose": false
 }

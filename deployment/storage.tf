@@ -17,20 +17,11 @@ resource "azurerm_storage_container" "deployments" {
   container_access_type = "private"
 }
 
-resource "azurerm_storage_blob" "slackapp_functioncode" {
-  name                   = var.slackapp_filename
+resource "azurerm_storage_blob" "function_code" {
+  name                   = var.function_filename
   storage_account_name   = azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.deployments.name
   type                   = "Block"
-  source                 = var.slackapp
-  content_md5            = filemd5(var.slackapp)
-}
-
-resource "azurerm_storage_blob" "githubapp_functioncode" {
-  name                   = var.githubapp_filename
-  storage_account_name   = azurerm_storage_account.storage.name
-  storage_container_name = azurerm_storage_container.deployments.name
-  type                   = "Block"
-  source                 = var.githubapp
-  content_md5            = filemd5(var.githubapp)
+  source                 = var.function
+  content_md5            = filemd5(var.function)
 }

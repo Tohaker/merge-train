@@ -4,9 +4,7 @@
   "description": "",
   "scripts": {
     "prebuild:zip": "mkdirp --mode=0700 build",
-    "zip:slackbot": "jszip-cli -c slackbotzip.json",
-    "zip:githubapp": "jszip-cli -c githubappzip.json",
-    "build:zip": "npm run zip:slackbot && npm run zip:githubapp",
+    "build:zip": "jszip-cli -c functionzip.json",
     "build": "tsc",
     "copy:slackbot": "cpy 'SlackBot/function.json' 'dist/SlackBot'",
     "copy:githubapp": "cpy 'GithubApp/function.json' 'dist/GithubApp'",
@@ -18,7 +16,6 @@
     "test:ci": "jest"
   },
   "dependencies": {
-    "@azure/cosmos": "^3.9.3",
     "@azure/functions": "^1.2.2",
     "@slack/bolt": "^3.1.1",
     "dotenv": "^8.2.0",

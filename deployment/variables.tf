@@ -13,24 +13,14 @@ variable "location" {
   default = "uksouth"
 }
 
-variable "githubapp" {
+variable "function" {
   type    = string
-  default = "../build/githubapp.zip"
+  default = "../build/functions.zip"
 }
 
-variable "githubapp_filename" {
+variable "function_filename" {
   type    = string
-  default = "githubapp.zip"
-}
-
-variable "slackapp" {
-  type    = string
-  default = "../build/slackapp.zip"
-}
-
-variable "slackapp_filename" {
-  type    = string
-  default = "slackapp.zip"
+  default = "functions.zip"
 }
 
 variable "slack_bot_token" {
