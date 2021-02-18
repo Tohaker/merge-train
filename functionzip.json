@@ -2,7 +2,9 @@
     "compressionLevel": 9,
     "dereferenceLinks": true,
     "entries": [
-        "dist",
+        "dist/common",
+        "dist/GithubApp",
+        "dist/SlackBot",
         "node_modules",
         "host.json",
         "proxies.json"
