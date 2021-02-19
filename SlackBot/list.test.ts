@@ -20,6 +20,8 @@ describe("List", () => {
     jest.mock("../graphql", () => ({
       createClient: mockCreateClient,
       getPullRequestsReadyForMerge: "query",
+      Data: jest.requireActual("../graphql").Data,
+      sortByDate: jest.requireActual("../graphql").sortByDate,
     }));
 
     getList = require("./list").getList;

@@ -8,6 +8,7 @@ import {
 } from "./slackApi";
 import { RequestBody, Action, User } from "./types";
 import { ChannelName } from "./config";
+import { handleItemAdded } from "./autoMerge";
 
 const createAssignmentText = async (reviewers: User[]) => {
   const { members } = await listUsers();
@@ -67,6 +68,7 @@ const httpTrigger: AzureFunction = async (
         });
 
         await postMessage(blocks, channel);
+        await handleItemAdded(pull_request, channel);
       }
       break;
     }

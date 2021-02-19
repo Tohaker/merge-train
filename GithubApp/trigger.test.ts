@@ -22,6 +22,7 @@ describe("HTTP Trigger", () => {
     listConversations: mockListConversations,
     listUsers: mockListUsers,
   };
+  const mockHandleItemAdded = jest.fn();
 
   const mockContext = {
     log: jest.fn(),
@@ -67,6 +68,9 @@ describe("HTTP Trigger", () => {
     jest.mock("./slackApi", () => mockSlackApi);
     jest.mock("./config", () => ({
       ChannelName,
+    }));
+    jest.mock("./autoMerge", () => ({
+      handleItemAdded: mockHandleItemAdded,
     }));
 
     httpTrigger = require(".").default;
@@ -125,6 +129,10 @@ describe("HTTP Trigger", () => {
           await httpTrigger(mockContext, mockRequest);
 
           expect(mockPostMessage).toBeCalledWith("blocks", "1234");
+          expect(mockHandleItemAdded).toBeCalledWith(
+            mockRequest.body.pull_request,
+            "1234"
+          );
         });
       });
 

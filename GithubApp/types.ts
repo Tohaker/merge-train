@@ -4,6 +4,7 @@ export type PullRequest = {
   created_at: string;
   updated_at: string;
   requested_reviewers: User[];
+  mergeable: boolean;
 };
 
 export type Label = {
