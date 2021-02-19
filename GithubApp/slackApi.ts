@@ -1,8 +1,8 @@
 import fetch from "node-fetch";
-import { Block } from "@slack/bolt";
+import { KnownBlock } from "@slack/bolt";
 import { Conversation, PanelData, SlackUserList } from "./types";
 
-export const postMessage = (blocks: Block[], channel: string) =>
+export const postMessage = (blocks: KnownBlock[], channel: string) =>
   fetch("https://slack.com/api/chat.postMessage", {
     method: "POST",
     headers: {
@@ -45,7 +45,7 @@ export const createSlackPanel = ({
   tag,
   changed,
 }: PanelData) => {
-  const blocks = [
+  const blocks: KnownBlock[] = [
     {
       type: "section",
       text: {
