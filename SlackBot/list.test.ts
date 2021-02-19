@@ -3,7 +3,7 @@ describe("List", () => {
 
   const mockRequest = jest.fn();
   const mockCreateClient = jest.fn();
-  mockCreateClient.mockResolvedValue({ request: mockRequest });
+  mockCreateClient.mockResolvedValue(mockRequest);
 
   const mockData = {
     repository: {
@@ -17,7 +17,7 @@ describe("List", () => {
   };
 
   beforeEach(() => {
-    jest.mock("./graphql", () => ({
+    jest.mock("../graphql", () => ({
       createClient: mockCreateClient,
       getPullRequestsReadyForMerge: "query",
     }));

@@ -1,10 +1,10 @@
-import { createClient, getPullRequestsReadyForMerge } from "./graphql";
+import { createClient, getPullRequestsReadyForMerge } from "../graphql";
 import { Data } from "./types";
 
 export const getList = async (): Promise<string[]> => {
   try {
     const client = await createClient();
-    const data: Data = await client.request(getPullRequestsReadyForMerge, {
+    const data: Data = await client(getPullRequestsReadyForMerge, {
       owner: process.env.GITHUB_OWNER,
       repo: process.env.GITHUB_REPOSITORY,
     });

@@ -1,6 +1,4 @@
-import { gql } from "graphql-request";
-
-export const getPullRequestsReadyForMerge = gql`
+export const getPullRequestsReadyForMerge = `
   query getPullRequestsReadyForMerge($owner: String!, $repo: String!) {
     repository(owner: $owner, name: $repo) {
       pullRequests(states: OPEN, labels: ["Ready for merge"], last: 30) {

@@ -1,17 +1,17 @@
 {
-    "compressionLevel": 9,
-    "dereferenceLinks": true,
-    "entries": [
-        "dist/common",
-        "dist/GithubApp",
-        "dist/SlackBot",
-        "node_modules",
-        "host.json",
-        "proxies.json"
-    ],
-    "force": true,
-    "mode": "add",
-    "outputEntry": "build/functions.zip",
-    "quiet": false,
-    "verbose": false
+  "compressionLevel": 9,
+  "dereferenceLinks": true,
+  "entries": [
+    "dist/graphql",
+    "dist/GithubApp",
+    "dist/SlackBot",
+    "node_modules",
+    "host.json",
+    "proxies.json"
+  ],
+  "force": true,
+  "mode": "add",
+  "outputEntry": "build/functions.zip",
+  "quiet": false,
+  "verbose": false
 }
