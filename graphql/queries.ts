@@ -5,6 +5,7 @@ export const getPullRequestsReadyForMerge = `
         nodes {
           title
           url
+          mergeable
           timelineItems(itemTypes: [LABELED_EVENT], last: 1) {
             updatedAt
           }

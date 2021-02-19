@@ -18,6 +18,7 @@ export const createClient = async () => {
   }
 
   const auth = createAppAuth(appAuthOptions);
+  console.log((await auth({ type: "installation" })).token);
 
   const graphqlWithAuth = graphql.defaults({
     baseUrl,
