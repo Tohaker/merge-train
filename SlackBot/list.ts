@@ -1,21 +1,19 @@
-import { createClient, getPullRequestsReadyForMerge } from "../graphql";
-import { Data } from "./types";
+import {
+  createClient,
+  getPullRequestsReadyForMerge,
+  Data,
+  sortByDate,
+} from "../graphql";
 
 export const getList = async (): Promise<string[]> => {
   try {
     const client = await createClient();
-    const data: Data = await client(getPullRequestsReadyForMerge, {
+    const data = await client<Data>(getPullRequestsReadyForMerge, {
       owner: process.env.GITHUB_OWNER,
       repo: process.env.GITHUB_REPOSITORY,
     });
 
-    const labeledEvents = data.repository.pullRequests.nodes
-      .map(({ title, url, timelineItems }) => ({
-        title,
-        url,
-        updatedAt: new Date(timelineItems.updatedAt),
-      }))
-      .sort((a, b) => a.updatedAt.valueOf() - b.updatedAt.valueOf());
+    const labeledEvents = sortByDate(data.repository.pullRequests.nodes);
 
     const formattedList = labeledEvents.reduce((acc, event) => {
       const line = `<${event.url}|${event.title}>`;

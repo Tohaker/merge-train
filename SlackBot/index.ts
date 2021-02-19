@@ -35,7 +35,7 @@ const httpTrigger: AzureFunction = async function (
     return;
   }
 
-  if (parsed.command === "/merge") {
+  if (parsed.command === "/merge" || parsed.command === "/test") {
     const { text } = parsed;
     await parseCommand({ text, context, respond });
   }
