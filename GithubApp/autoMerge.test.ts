@@ -31,9 +31,9 @@ describe("Auto Merge", () => {
     handleItemAdded = require("./autoMerge").handleItemAdded;
   });
 
-  describe("given the queue has no items", () => {
+  describe("given the queue has items", () => {
     beforeEach(() => {
-      mockHasItems.mockReturnValue(false);
+      mockHasItems.mockReturnValue(true);
     });
 
     it("should not post any message", async () => {
@@ -42,9 +42,9 @@ describe("Auto Merge", () => {
     });
   });
 
-  describe("given the queue has items", () => {
+  describe("given the queue has no items", () => {
     beforeEach(() => {
-      mockHasItems.mockReturnValue(true);
+      mockHasItems.mockReturnValue(false);
     });
 
     describe("given the pr is not mergeable", () => {
@@ -61,7 +61,7 @@ describe("Auto Merge", () => {
               text: {
                 type: "mrkdwn",
                 text:
-                  "None of the PRs in the queue can be merged, remove the label until this is resolved.",
+                  "This PR cannot be merged yet, remove the label until this is resolved.",
               },
             },
           ],

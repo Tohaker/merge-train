@@ -8,7 +8,7 @@ export const handleItemAdded = async (
 ) => {
   const queue = await getQueue();
 
-  if (!hasItems(queue)) {
+  if (hasItems(queue)) {
     console.log("Queue not empty, no new merges to perform");
     return;
   }
@@ -35,7 +35,7 @@ export const handleItemAdded = async (
           text: {
             type: "mrkdwn",
             text:
-              "None of the PRs in the queue can be merged, remove the label until this is resolved.",
+              "This PR cannot be merged yet, remove the label until this is resolved.",
           },
         },
       ],
