@@ -68,7 +68,7 @@ const httpTrigger: AzureFunction = async (
         });
 
         await postMessage(blocks, channel);
-        await handleItemAdded(channel);
+        await handleItemAdded(pull_request, channel);
       }
       break;
     }

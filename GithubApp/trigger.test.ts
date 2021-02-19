@@ -129,7 +129,10 @@ describe("HTTP Trigger", () => {
           await httpTrigger(mockContext, mockRequest);
 
           expect(mockPostMessage).toBeCalledWith("blocks", "1234");
-          expect(mockHandleItemAdded).toBeCalledWith("1234");
+          expect(mockHandleItemAdded).toBeCalledWith(
+            mockRequest.body.pull_request,
+            "1234"
+          );
         });
       });
 

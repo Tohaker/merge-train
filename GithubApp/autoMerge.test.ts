@@ -1,16 +1,25 @@
-describe("Auto Merge", () => {
-  let handleItemAdded: (channel: string) => Promise<void>;
+import { PullRequest } from "./types";
 
-  const mockGetMergeableItems = jest.fn();
+describe("Auto Merge", () => {
+  let handleItemAdded: (pr: PullRequest, channel: string) => Promise<void>;
+
   const mockGetQueue = jest.fn();
   const mockHasItems = jest.fn();
   const mockPostMessage = jest.fn();
+
+  const mockPR: PullRequest = {
+    html_url: "mockUrl",
+    title: "PR",
+    created_at: "1000",
+    updated_at: "2000",
+    requested_reviewers: [],
+    mergeable: true,
+  };
 
   beforeEach(() => {
     mockGetQueue.mockResolvedValue({ data: true });
 
     jest.mock("./queue", () => ({
-      getMergeableItems: mockGetMergeableItems,
       getQueue: mockGetQueue,
       hasItems: mockHasItems,
     }));
@@ -28,7 +37,7 @@ describe("Auto Merge", () => {
     });
 
     it("should not post any message", async () => {
-      await handleItemAdded("channel");
+      await handleItemAdded(mockPR, "channel");
       expect(mockPostMessage).not.toBeCalled();
     });
   });
@@ -38,13 +47,13 @@ describe("Auto Merge", () => {
       mockHasItems.mockReturnValue(true);
     });
 
-    describe("given there are no mergeable items", () => {
+    describe("given the pr is not mergeable", () => {
       beforeEach(() => {
-        mockGetMergeableItems.mockReturnValue([]);
+        mockPR.mergeable = false;
       });
 
       it("should post a message", async () => {
-        await handleItemAdded("channel");
+        await handleItemAdded(mockPR, "channel");
         expect(mockPostMessage).toBeCalledWith(
           [
             {
@@ -61,13 +70,13 @@ describe("Auto Merge", () => {
       });
     });
 
-    describe("given there are mergeable items", () => {
+    describe("given the pr is mergeable", () => {
       beforeEach(() => {
-        mockGetMergeableItems.mockReturnValue(["mock item"]);
+        mockPR.mergeable = true;
       });
 
       it("should post a message", async () => {
-        await handleItemAdded("channel");
+        await handleItemAdded(mockPR, "channel");
         expect(mockPostMessage).toBeCalledWith(
           [
             {

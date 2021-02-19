@@ -1,7 +1,11 @@
-import { getMergeableItems, getQueue, hasItems } from "./queue";
+import { getQueue, hasItems } from "./queue";
 import { postMessage } from "./slackApi";
+import { PullRequest } from "./types";
 
-export const handleItemAdded = async (channel: string) => {
+export const handleItemAdded = async (
+  pullRequest: PullRequest,
+  channel: string
+) => {
   const queue = await getQueue();
 
   if (!hasItems(queue)) {
@@ -9,9 +13,7 @@ export const handleItemAdded = async (channel: string) => {
     return;
   }
 
-  const mergeableItems = getMergeableItems(queue);
-
-  if (mergeableItems.length) {
+  if (pullRequest.mergeable) {
     // TODO: Replace with actual merge request
     await postMessage(
       [
