@@ -1,6 +1,6 @@
 import { getQueue, hasItems } from "./queue";
 import { postMessage } from "./slackApi";
-import { PullRequest } from "./types";
+import { PullRequest } from "@octokit/webhooks-definitions/schema";
 
 export const handleItemAdded = async (
   pullRequest: PullRequest,

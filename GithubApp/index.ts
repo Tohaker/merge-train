@@ -1,4 +1,9 @@
-import { AzureFunction, Context, HttpRequest } from "@azure/functions";
+import { AzureFunction, Context } from "@azure/functions";
+import {
+  PullRequestLabeledEvent,
+  Team,
+  User,
+} from "@octokit/webhooks-definitions/schema";
 import { checkSignature } from "./checkSignature";
 import {
   postMessage,
@@ -6,22 +11,25 @@ import {
   listConversations,
   listUsers,
 } from "./slackApi";
-import { RequestBody, Action, User } from "./types";
+import { Request } from "./types";
 import { ChannelName } from "./config";
 import { handleItemAdded } from "./autoMerge";
 
-const createAssignmentText = async (reviewers: User[]) => {
+const createAssignmentText = async (reviewers: (User | Team)[]) => {
   const { members } = await listUsers();
 
   return reviewers
     .reduce((acc, user) => {
-      const slackUser = members.find(
-        (slackUser) => slackUser.profile.title === user.login
-      );
-      if (slackUser?.id) {
-        return acc + `<@${slackUser.id}> `;
-      } else {
-        return acc + `${user.login} `;
+      // This gets us out of the User | Team union
+      if ("login" in user) {
+        const slackUser = members.find(
+          (slackUser) => slackUser.profile.title === user.login
+        );
+        if (slackUser?.id) {
+          return acc + `<@${slackUser.id}> `;
+        } else {
+          return acc + `${user.login} `;
+        }
       }
     }, "")
     .trim();
@@ -29,7 +37,7 @@ const createAssignmentText = async (reviewers: User[]) => {
 
 const httpTrigger: AzureFunction = async (
   context: Context,
-  req: HttpRequest
+  req: Request
 ): Promise<void> => {
   if (!checkSignature(req)) {
     context.log("Hash signature doesn't match - terminating session");
@@ -42,7 +50,8 @@ const httpTrigger: AzureFunction = async (
     (acc, channel) => ((acc[channel.name] = channel.id), acc),
     {}
   );
-  const { action, pull_request, label, sender }: RequestBody = req.body;
+  const { action, pull_request, sender } = req.body;
+  const label = (req.body as PullRequestLabeledEvent).label;
 
   context.log({
     action,
@@ -56,7 +65,7 @@ const httpTrigger: AzureFunction = async (
   const readyForMergeLabel = "ready for merge";
 
   switch (action) {
-    case Action.LABELED: {
+    case "labeled": {
       if (labelName.includes(readyForMergeLabel)) {
         const channel = channels[ChannelName.MERGE];
 
@@ -72,7 +81,7 @@ const httpTrigger: AzureFunction = async (
       }
       break;
     }
-    case Action.UNLABELED: {
+    case "unlabeled": {
       if (labelName.includes(readyForMergeLabel)) {
         const channel = channels[ChannelName.MERGE];
 
@@ -87,7 +96,7 @@ const httpTrigger: AzureFunction = async (
       }
       break;
     }
-    case Action.REVIEW_REQUESTED: {
+    case "review_requested": {
       // This prevents duplicates of the same review posts
       if (req.body.hasOwnProperty("requested_team")) {
         const channel = channels[ChannelName.REVIEWS];

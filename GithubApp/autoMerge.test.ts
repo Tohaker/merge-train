@@ -1,4 +1,4 @@
-import { PullRequest } from "./types";
+import { PullRequest } from "@octokit/webhooks-definitions/schema";
 
 describe("Auto Merge", () => {
   let handleItemAdded: (pr: PullRequest, channel: string) => Promise<void>;
@@ -7,6 +7,7 @@ describe("Auto Merge", () => {
   const mockHasItems = jest.fn();
   const mockPostMessage = jest.fn();
 
+  //@ts-ignore
   const mockPR: PullRequest = {
     html_url: "mockUrl",
     title: "PR",

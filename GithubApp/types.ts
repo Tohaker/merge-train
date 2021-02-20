@@ -1,24 +1,12 @@
-export type PullRequest = {
-  html_url: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-  requested_reviewers: User[];
-  mergeable: boolean;
-};
+import { HttpRequest } from "@azure/functions";
+import {
+  PullRequestEvent,
+  PullRequest,
+} from "@octokit/webhooks-definitions/schema";
 
-export type Label = {
-  name: string;
-};
-
-export type User = {
-  login: string;
-  avatar_url: string;
-};
-
-export type RequestedTeam = {
-  name: "string";
-};
+export interface Request extends HttpRequest {
+  body: PullRequestEvent;
+}
 
 export type PanelData = {
   footer?: string;
@@ -52,17 +40,3 @@ export type SlackUserList = {
   ok: boolean;
   members: SlackUser[];
 };
-
-export type RequestBody = {
-  action: string;
-  pull_request: PullRequest;
-  label: Label;
-  sender: User;
-  requested_team?: RequestedTeam;
-};
-
-export enum Action {
-  LABELED = "labeled",
-  UNLABELED = "unlabeled",
-  REVIEW_REQUESTED = "review_requested",
-}
