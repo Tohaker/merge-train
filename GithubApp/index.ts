@@ -6,11 +6,11 @@ import {
   User,
 } from "@octokit/webhooks-definitions/schema";
 import dotenv from "dotenv";
-import { checkSignature } from "./checkSignature";
 import { createSlackPanel } from "./slack";
 import { Conversation, Request, SlackUser } from "./types";
 import { ChannelName } from "./config";
 import { handleItemAdded } from "./autoMerge";
+import { checkSignature } from "../common/checkSignature";
 
 dotenv.config();
 
@@ -43,6 +43,10 @@ const httpTrigger: AzureFunction = async (
 ): Promise<void> => {
   if (!checkSignature(req)) {
     context.log("Hash signature doesn't match - terminating session");
+    context.done(null, {
+      status: 401,
+      body: "Hash signature doesn't match",
+    });
     return;
   }
 

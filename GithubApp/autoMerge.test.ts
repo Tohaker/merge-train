@@ -31,7 +31,7 @@ describe("Auto Merge", () => {
   beforeEach(() => {
     mockGetQueue.mockResolvedValue({ data: true });
 
-    jest.mock("./queue", () => ({
+    jest.mock("../graphql/queue", () => ({
       getQueue: mockGetQueue,
       getItems: mockGetItems,
     }));

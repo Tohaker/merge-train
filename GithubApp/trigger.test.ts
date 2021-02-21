@@ -81,7 +81,7 @@ describe("HTTP Trigger", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.mock("./checkSignature", () => ({
+    jest.mock("../common/checkSignature", () => ({
       checkSignature: mockCheckSignature,
     }));
     jest.mock("./slack", () => mockSlack);

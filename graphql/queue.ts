@@ -4,7 +4,7 @@ import {
   getPullRequestsReadyForMerge,
   Queue,
   MergeableState,
-} from "../graphql";
+} from ".";
 
 export const getQueue = async () => {
   const client = await createClient();

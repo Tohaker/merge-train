@@ -1,6 +1,6 @@
 import { WebClient } from "@slack/web-api";
 import { PullRequest } from "@octokit/webhooks-definitions/schema";
-import { getQueue, getItems } from "./queue";
+import { getQueue, getItems } from "../graphql/queue";
 
 export const handleItemAdded = async (
   client: WebClient,

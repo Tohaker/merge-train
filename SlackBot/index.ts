@@ -30,8 +30,7 @@ const httpTrigger: AzureFunction = async function (
       `v0:${req.headers["x-slack-request-timestamp"]}:${req.rawBody}`
     )
   ) {
-    context.log("Signature does not match");
-    context.done(null, { status: 401 });
+    context.done(null, { status: 401, body: "Signature does not match" });
     return;
   }
 
