@@ -5,11 +5,14 @@ import {
   Team,
   User,
 } from "@octokit/webhooks-definitions/schema";
+import dotenv from "dotenv";
 import { checkSignature } from "./checkSignature";
 import { createSlackPanel } from "./slack";
 import { Conversation, Request, SlackUser } from "./types";
 import { ChannelName } from "./config";
 import { handleItemAdded } from "./autoMerge";
+
+dotenv.config();
 
 const createAssignmentText = async (
   client: WebClient,
@@ -43,6 +46,7 @@ const httpTrigger: AzureFunction = async (
     return;
   }
 
+  console.log(process.env.SLACK_BOT_TOKEN);
   const slackWebClient = new WebClient(process.env.SLACK_BOT_TOKEN);
   const icon_emoji = ":steam_locomotive:";
   const channels: Record<
