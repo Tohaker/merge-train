@@ -1,3 +1,9 @@
+import { WebClient } from "@slack/web-api";
+
+jest.mock("@slack/web-api");
+
+const mockWebClient = WebClient as jest.MockedClass<typeof WebClient>;
+
 describe("HTTP Trigger", () => {
   let httpTrigger;
 
@@ -16,12 +22,25 @@ describe("HTTP Trigger", () => {
     ],
   }));
   const mockListUsers = jest.fn();
-  const mockSlackApi = {
-    postMessage: mockPostMessage,
+  const mockSlack = {
     createSlackPanel: mockCreateSlackPanel,
-    listConversations: mockListConversations,
-    listUsers: mockListUsers,
   };
+
+  mockWebClient.mockImplementation(() => ({
+    //@ts-ignore
+    users: {
+      list: mockListUsers,
+    },
+    conversations: {
+      //@ts-ignore
+      list: mockListConversations,
+    },
+    //@ts-ignore
+    chat: {
+      postMessage: mockPostMessage,
+    },
+  }));
+
   const mockHandleItemAdded = jest.fn();
 
   const mockContext = {
@@ -65,7 +84,7 @@ describe("HTTP Trigger", () => {
     jest.mock("./checkSignature", () => ({
       checkSignature: mockCheckSignature,
     }));
-    jest.mock("./slackApi", () => mockSlackApi);
+    jest.mock("./slack", () => mockSlack);
     jest.mock("./config", () => ({
       ChannelName,
     }));
@@ -128,11 +147,12 @@ describe("HTTP Trigger", () => {
           mockCreateSlackPanel.mockReturnValueOnce("blocks");
           await httpTrigger(mockContext, mockRequest);
 
-          expect(mockPostMessage).toBeCalledWith("blocks", "1234");
-          expect(mockHandleItemAdded).toBeCalledWith(
-            mockRequest.body.pull_request,
-            "1234"
-          );
+          expect(mockPostMessage).toBeCalledWith({
+            icon_emoji: ":steam_locomotive:",
+            text: "A new PR is ready to merge",
+            blocks: "blocks",
+            channel: "1234",
+          });
         });
       });
 
@@ -163,7 +183,12 @@ describe("HTTP Trigger", () => {
           mockCreateSlackPanel.mockReturnValueOnce("blocks");
           await httpTrigger(mockContext, mockRequest);
 
-          expect(mockPostMessage).toBeCalledWith("blocks", "1234");
+          expect(mockPostMessage).toBeCalledWith({
+            icon_emoji: ":steam_locomotive:",
+            text: "A PR has had its status changed",
+            blocks: "blocks",
+            channel: "1234",
+          });
         });
       });
 
@@ -227,7 +252,12 @@ describe("HTTP Trigger", () => {
               pull_request: mockRequest.body.pull_request,
               tag: "<@id2>",
             });
-            expect(mockPostMessage).toBeCalledWith("blocks", "4567");
+            expect(mockPostMessage).toBeCalledWith({
+              icon_emoji: ":steam_locomotive:",
+              text: "A PR has been marked for review",
+              blocks: "blocks",
+              channel: "4567",
+            });
             delete mockRequest.body["requested_team"];
           });
         });
@@ -264,7 +294,12 @@ describe("HTTP Trigger", () => {
               pull_request: mockRequest.body.pull_request,
               tag: "username2",
             });
-            expect(mockPostMessage).toBeCalledWith("blocks", "4567");
+            expect(mockPostMessage).toBeCalledWith({
+              icon_emoji: ":steam_locomotive:",
+              text: "A PR has been marked for review",
+              blocks: "blocks",
+              channel: "4567",
+            });
             delete mockRequest.body["requested_team"];
           });
         });

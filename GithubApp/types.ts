@@ -26,7 +26,7 @@ export type Conversation = {
   channels: Channel[];
 };
 
-type SlackUser = {
+export type SlackUser = {
   id: string;
   name: string;
   real_name: string;
@@ -34,9 +34,4 @@ type SlackUser = {
     title: string;
     display_name: string;
   };
-};
-
-export type SlackUserList = {
-  ok: boolean;
-  members: SlackUser[];
 };

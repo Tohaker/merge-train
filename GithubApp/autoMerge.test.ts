@@ -1,11 +1,22 @@
+import { WebClient } from "@slack/web-api";
 import { PullRequest } from "@octokit/webhooks-definitions/schema";
 
 describe("Auto Merge", () => {
-  let handleItemAdded: (pr: PullRequest, channel: string) => Promise<void>;
+  let handleItemAdded: (
+    client: WebClient,
+    pr: PullRequest,
+    channel: string
+  ) => Promise<void>;
 
   const mockGetQueue = jest.fn();
   const mockHasItems = jest.fn();
-  const mockPostMessage = jest.fn();
+
+  const mockWebClient: WebClient = {
+    //@ts-ignore
+    chat: {
+      postMessage: jest.fn(),
+    },
+  };
 
   //@ts-ignore
   const mockPR: PullRequest = {
@@ -25,10 +36,6 @@ describe("Auto Merge", () => {
       hasItems: mockHasItems,
     }));
 
-    jest.mock("./slackApi", () => ({
-      postMessage: mockPostMessage,
-    }));
-
     handleItemAdded = require("./autoMerge").handleItemAdded;
   });
 
@@ -38,8 +45,8 @@ describe("Auto Merge", () => {
     });
 
     it("should not post any message", async () => {
-      await handleItemAdded(mockPR, "channel");
-      expect(mockPostMessage).not.toBeCalled();
+      await handleItemAdded(mockWebClient, mockPR, "channel");
+      expect(mockWebClient.chat.postMessage).not.toBeCalled();
     });
   });
 
@@ -54,9 +61,12 @@ describe("Auto Merge", () => {
       });
 
       it("should post a message", async () => {
-        await handleItemAdded(mockPR, "channel");
-        expect(mockPostMessage).toBeCalledWith(
-          [
+        await handleItemAdded(mockWebClient, mockPR, "channel");
+        expect(mockWebClient.chat.postMessage).toBeCalledWith({
+          icon_emoji: ":steam_locomotive:",
+          text:
+            "This PR cannot be merged yet, remove the label until this is resolved.",
+          blocks: [
             {
               type: "section",
               text: {
@@ -66,8 +76,8 @@ describe("Auto Merge", () => {
               },
             },
           ],
-          "channel"
-        );
+          channel: "channel",
+        });
       });
     });
 
@@ -77,9 +87,11 @@ describe("Auto Merge", () => {
       });
 
       it("should post a message", async () => {
-        await handleItemAdded(mockPR, "channel");
-        expect(mockPostMessage).toBeCalledWith(
-          [
+        await handleItemAdded(mockWebClient, mockPR, "channel");
+        expect(mockWebClient.chat.postMessage).toBeCalledWith({
+          icon_emoji: ":steam_locomotive:",
+          text: "I would have merged something now, is it a good time?",
+          blocks: [
             {
               type: "section",
               text: {
@@ -88,8 +100,8 @@ describe("Auto Merge", () => {
               },
             },
           ],
-          "channel"
-        );
+          channel: "channel",
+        });
       });
     });
   });

@@ -1,8 +1,9 @@
-import { getQueue, hasItems } from "./queue";
-import { postMessage } from "./slackApi";
+import { WebClient } from "@slack/web-api";
 import { PullRequest } from "@octokit/webhooks-definitions/schema";
+import { getQueue, hasItems } from "./queue";
 
 export const handleItemAdded = async (
+  client: WebClient,
   pullRequest: PullRequest,
   channel: string
 ) => {
@@ -15,8 +16,10 @@ export const handleItemAdded = async (
 
   if (pullRequest.mergeable) {
     // TODO: Replace with actual merge request
-    await postMessage(
-      [
+    await client.chat.postMessage({
+      icon_emoji: ":steam_locomotive:",
+      text: "I would have merged something now, is it a good time?",
+      blocks: [
         {
           type: "section",
           text: {
@@ -25,11 +28,14 @@ export const handleItemAdded = async (
           },
         },
       ],
-      channel
-    );
+      channel,
+    });
   } else {
-    await postMessage(
-      [
+    await client.chat.postMessage({
+      icon_emoji: ":steam_locomotive:",
+      text:
+        "This PR cannot be merged yet, remove the label until this is resolved.",
+      blocks: [
         {
           type: "section",
           text: {
@@ -39,7 +45,7 @@ export const handleItemAdded = async (
           },
         },
       ],
-      channel
-    );
+      channel,
+    });
   }
 };
