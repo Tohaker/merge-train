@@ -2,9 +2,11 @@
   "compressionLevel": 9,
   "dereferenceLinks": true,
   "entries": [
+    "dist/common",
     "dist/graphql",
     "dist/GithubApp",
     "dist/SlackBot",
+    "dist/MergeNext",
     "node_modules",
     "host.json",
     "proxies.json"

@@ -8,6 +8,7 @@
     "build": "tsc",
     "copy:slackbot": "cpy 'SlackBot/function.json' 'dist/SlackBot'",
     "copy:githubapp": "cpy 'GithubApp/function.json' 'dist/GithubApp'",
+    "copy:mergenext": "cpy 'MergeNext/function.json' 'dist/MergeNext'",
     "postbuild": "npm run copy:slackbot && npm run copy:githubapp",
     "watch": "tsc -w",
     "prestart": "npm run build",
