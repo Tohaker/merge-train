@@ -1,17 +1,17 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions';
+import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 
-describe('HTTP Trigger', () => {
+describe("HTTP Trigger", () => {
   let httpTrigger: AzureFunction;
 
   const mockContext: Context = {
     bindings: {},
     bindingData: {},
     bindingDefinitions: [],
-    invocationId: '123',
+    invocationId: "123",
     executionContext: {
-      invocationId: '123',
-      functionName: 'mock function',
-      functionDirectory: 'dist',
+      invocationId: "123",
+      functionName: "mock function",
+      functionDirectory: "dist",
     },
     log: (function () {
       let main = <any>jest.fn((message) => message);
@@ -23,21 +23,21 @@ describe('HTTP Trigger', () => {
     })(),
     traceContext: {
       attributes: {},
-      traceparent: 'parent',
-      tracestate: 'state',
+      traceparent: "parent",
+      tracestate: "state",
     },
     done: jest.fn(),
   };
 
-  let command = 'merge';
-  let text = 'add something';
+  let command = "merge";
+  let text = "add something";
 
   const mockRequest: HttpRequest = {
-    method: 'POST',
-    url: 'http://fake.url',
+    method: "POST",
+    url: "http://fake.url",
     headers: {
-      'x-slack-signature': 'signature',
-      'x-slack-request-timestamp': '1234',
+      "x-slack-signature": "signature",
+      "x-slack-request-timestamp": "1234",
     },
     query: {},
     params: {},
@@ -49,40 +49,43 @@ describe('HTTP Trigger', () => {
   const mockParseCommand = jest.fn();
 
   beforeEach(() => {
-    jest.mock('./command', () => ({
+    jest.mock("./command", () => ({
       parseCommand: mockParseCommand,
     }));
-    jest.mock('./checkSignature', () => ({
+    jest.mock("./checkSignature", () => ({
       checkSignature: mockCheckSignature,
     }));
-    httpTrigger = require('.').default;
+    httpTrigger = require(".").default;
   });
 
-  describe('given the trigger is invoked', () => {
+  describe("given the trigger is invoked", () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
-    describe('given the signature does not match', () => {
+    describe("given the signature does not match", () => {
       beforeEach(() => {
         mockCheckSignature.mockReturnValue(false);
       });
 
-      it('should return early', async () => {
+      it("should return early", async () => {
         await httpTrigger(mockContext, mockRequest);
 
         expect(mockParseCommand).not.toBeCalled();
-        expect(mockContext.done).toBeCalledWith(null, { status: 401 });
+        expect(mockContext.done).toBeCalledWith(null, {
+          status: 401,
+          body: "Signature does not match",
+        });
       });
     });
 
-    describe('given the signature matches', () => {
+    describe("given the signature matches", () => {
       beforeEach(() => {
         mockCheckSignature.mockReturnValue(true);
       });
 
-      describe('given the /merge command is sent', () => {
-        it('should call parseCommand', async () => {
+      describe("given the /merge command is sent", () => {
+        it("should call parseCommand", async () => {
           await httpTrigger(mockContext, mockRequest);
           expect(mockParseCommand).toBeCalledWith({
             text,

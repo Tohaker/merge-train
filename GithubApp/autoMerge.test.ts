@@ -20,7 +20,7 @@ describe("Auto Merge", () => {
 
   //@ts-ignore
   const mockPR: PullRequest = {
-    html_url: "mockUrl",
+    url: "mockUrl",
     title: "PR",
     created_at: "1000",
     updated_at: "2000",
@@ -31,7 +31,7 @@ describe("Auto Merge", () => {
   beforeEach(() => {
     mockGetQueue.mockResolvedValue({ data: true });
 
-    jest.mock("./queue", () => ({
+    jest.mock("../graphql/queue", () => ({
       getQueue: mockGetQueue,
       getItems: mockGetItems,
     }));
@@ -66,16 +66,6 @@ describe("Auto Merge", () => {
           icon_emoji: ":steam_locomotive:",
           text:
             "This PR cannot be merged yet, remove the label until this is resolved.",
-          blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text:
-                  "This PR cannot be merged yet, remove the label until this is resolved.",
-              },
-            },
-          ],
           channel: "channel",
         });
       });
@@ -90,16 +80,7 @@ describe("Auto Merge", () => {
         await handleItemAdded(mockWebClient, mockPR, "channel");
         expect(mockWebClient.chat.postMessage).toBeCalledWith({
           icon_emoji: ":steam_locomotive:",
-          text: "I would have merged something now, is it a good time?",
-          blocks: [
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: "I would have merged something now, is it a good time?",
-              },
-            },
-          ],
+          text: "I would have merged <mockUrl|PR> now, is it a good time?",
           channel: "channel",
         });
       });

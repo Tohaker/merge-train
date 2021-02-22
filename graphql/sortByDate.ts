@@ -1,4 +1,4 @@
-import { PullRequest } from "./types";
+import { PullRequest } from "@octokit/graphql-schema";
 
 export default (pullRequests: PullRequest[]) =>
   pullRequests.sort(
