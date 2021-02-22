@@ -10,8 +10,7 @@ describe("Queue", () => {
       createClient: mockCreateClient,
       sortByDate: jest.requireActual("../graphql").sortByDate,
       getPullRequestsReadyForMerge: mockQuery,
-      Data: jest.requireActual("../graphql").Data,
-      MergeableState: jest.requireActual("../graphql").MergeableState,
+      Queue: jest.requireActual("../graphql").Queue,
     }));
 
     queue = require("./queue");

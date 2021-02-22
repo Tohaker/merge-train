@@ -45,6 +45,7 @@ describe("HTTP Trigger", () => {
 
   const mockContext = {
     log: jest.fn(),
+    done: jest.fn(),
   };
   const mockRequest = {
     body: {
@@ -85,7 +86,7 @@ describe("HTTP Trigger", () => {
       checkSignature: mockCheckSignature,
     }));
     jest.mock("./slack", () => mockSlack);
-    jest.mock("./config", () => ({
+    jest.mock("../common/config", () => ({
       ChannelName,
     }));
     jest.mock("./autoMerge", () => ({

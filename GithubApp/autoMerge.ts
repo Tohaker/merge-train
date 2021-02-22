@@ -18,16 +18,7 @@ export const handleItemAdded = async (
     // TODO: Replace with actual merge request
     await client.chat.postMessage({
       icon_emoji: ":steam_locomotive:",
-      text: "I would have merged something now, is it a good time?",
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: "I would have merged something now, is it a good time?",
-          },
-        },
-      ],
+      text: `I would have merged <${pullRequest.url}|${pullRequest.title}> now, is it a good time?`,
       channel,
     });
   } else {
@@ -35,16 +26,6 @@ export const handleItemAdded = async (
       icon_emoji: ":steam_locomotive:",
       text:
         "This PR cannot be merged yet, remove the label until this is resolved.",
-      blocks: [
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text:
-              "This PR cannot be merged yet, remove the label until this is resolved.",
-          },
-        },
-      ],
       channel,
     });
   }

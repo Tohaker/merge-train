@@ -16,16 +16,6 @@ export type PanelData = {
   changed?: boolean;
 };
 
-export type Channel = {
-  id: string;
-  name: string;
-};
-
-export type Conversation = {
-  ok: boolean;
-  channels: Channel[];
-};
-
 export type SlackUser = {
   id: string;
   name: string;

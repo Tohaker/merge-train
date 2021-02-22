@@ -3,7 +3,6 @@ import {
   sortByDate,
   getPullRequestsReadyForMerge,
   Queue,
-  MergeableState,
 } from ".";
 
 export const getQueue = async () => {
@@ -29,7 +28,7 @@ export const getMergeableItems = (queue: Queue) => {
 
   if (nodes.length) {
     return sortByDate(
-      nodes.filter(({ mergeable }) => mergeable === MergeableState.MERGEABLE)
+      nodes.filter(({ mergeable }) => mergeable === "MERGEABLE")
     );
   } else {
     return [];

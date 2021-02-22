@@ -7,10 +7,11 @@ import {
 } from "@octokit/webhooks-definitions/schema";
 import dotenv from "dotenv";
 import { createSlackPanel } from "./slack";
-import { Conversation, Request, SlackUser } from "./types";
-import { ChannelName } from "./config";
+import { Request, SlackUser } from "./types";
+import { ChannelName } from "../common/config";
 import { handleItemAdded } from "./autoMerge";
 import { checkSignature } from "../common/checkSignature";
+import { Conversation } from "../common/types";
 
 dotenv.config();
 
