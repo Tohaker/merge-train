@@ -38,6 +38,16 @@ describe("Queue", () => {
     });
   });
 
+  describe("getItems", () => {
+    it("should return just the nodes", () => {
+      expect(
+        queue.getItems({
+          repository: { pullRequests: { nodes: ["mock node"] } },
+        })
+      ).toEqual(["mock node"]);
+    });
+  });
+
   describe("hasItems", () => {
     it.each([
       [{ repository: { pullRequests: { nodes: [] } } }, false],

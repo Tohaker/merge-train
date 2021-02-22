@@ -9,7 +9,7 @@ describe("Auto Merge", () => {
   ) => Promise<void>;
 
   const mockGetQueue = jest.fn();
-  const mockHasItems = jest.fn();
+  const mockGetItems = jest.fn();
 
   const mockWebClient: WebClient = {
     //@ts-ignore
@@ -33,15 +33,15 @@ describe("Auto Merge", () => {
 
     jest.mock("./queue", () => ({
       getQueue: mockGetQueue,
-      hasItems: mockHasItems,
+      getItems: mockGetItems,
     }));
 
     handleItemAdded = require("./autoMerge").handleItemAdded;
   });
 
-  describe("given the queue has items", () => {
+  describe("given the queue has 2 items", () => {
     beforeEach(() => {
-      mockHasItems.mockReturnValue(true);
+      mockGetItems.mockReturnValue([{ mergeable: true }, { mergeable: true }]);
     });
 
     it("should not post any message", async () => {
@@ -50,9 +50,9 @@ describe("Auto Merge", () => {
     });
   });
 
-  describe("given the queue has no items", () => {
+  describe("given the queue has 1 item", () => {
     beforeEach(() => {
-      mockHasItems.mockReturnValue(false);
+      mockGetItems.mockReturnValue([{ mergeable: true }]);
     });
 
     describe("given the pr is not mergeable", () => {

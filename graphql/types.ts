@@ -13,7 +13,7 @@ export type PullRequest = {
   };
 };
 
-export type Data = {
+export type Queue = {
   repository: {
     pullRequests: {
       nodes: PullRequest[];

@@ -46,7 +46,6 @@ const httpTrigger: AzureFunction = async (
     return;
   }
 
-  console.log(process.env.SLACK_BOT_TOKEN);
   const slackWebClient = new WebClient(process.env.SLACK_BOT_TOKEN);
   const icon_emoji = ":steam_locomotive:";
   const channels: Record<

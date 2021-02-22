@@ -1,6 +1,6 @@
 import { WebClient } from "@slack/web-api";
 import { PullRequest } from "@octokit/webhooks-definitions/schema";
-import { getQueue, hasItems } from "./queue";
+import { getQueue, getItems } from "./queue";
 
 export const handleItemAdded = async (
   client: WebClient,
@@ -9,8 +9,8 @@ export const handleItemAdded = async (
 ) => {
   const queue = await getQueue();
 
-  if (hasItems(queue)) {
-    console.log("Queue not empty, no new merges to perform");
+  if (getItems(queue).length > 1) {
+    console.log("Queue was not empty, no new merges to perform");
     return;
   }
 

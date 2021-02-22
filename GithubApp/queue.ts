@@ -2,13 +2,13 @@ import {
   createClient,
   sortByDate,
   getPullRequestsReadyForMerge,
-  Data,
+  Queue,
   MergeableState,
 } from "../graphql";
 
 export const getQueue = async () => {
   const client = await createClient();
-  const data = await client<Data>(getPullRequestsReadyForMerge, {
+  const data = await client<Queue>(getPullRequestsReadyForMerge, {
     owner: process.env.GITHUB_OWNER,
     repo: process.env.GITHUB_REPOSITORY,
   });
@@ -16,11 +16,15 @@ export const getQueue = async () => {
   return data;
 };
 
-export const hasItems = (queue: Data) => {
-  return queue.repository.pullRequests.nodes.length > 0;
+export const getItems = (queue: Queue) => {
+  return queue.repository.pullRequests.nodes;
 };
 
-export const getMergeableItems = (queue: Data) => {
+export const hasItems = (queue: Queue) => {
+  return getItems(queue).length > 0;
+};
+
+export const getMergeableItems = (queue: Queue) => {
   const { nodes } = queue.repository.pullRequests;
 
   if (nodes.length) {
