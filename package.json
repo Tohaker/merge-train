@@ -9,7 +9,7 @@
     "copy:slackbot": "cpy 'SlackBot/function.json' 'dist/SlackBot'",
     "copy:githubapp": "cpy 'GithubApp/function.json' 'dist/GithubApp'",
     "copy:mergenext": "cpy 'MergeNext/function.json' 'dist/MergeNext'",
-    "postbuild": "npm run copy:slackbot && npm run copy:githubapp",
+    "postbuild": "npm run copy:slackbot && npm run copy:githubapp && npm run copy:mergenext",
     "watch": "tsc -w",
     "prestart": "npm run build",
     "start": "func start --script-root dist",
