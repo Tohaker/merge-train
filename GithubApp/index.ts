@@ -1,17 +1,20 @@
 import { AzureFunction, Context } from "@azure/functions";
 import { WebClient } from "@slack/web-api";
 import {
+  PullRequestEvent,
   PullRequestLabeledEvent,
+  StatusEvent,
   Team,
   User,
 } from "@octokit/webhooks-definitions/schema";
 import dotenv from "dotenv";
 import { createSlackPanel } from "./slack";
 import { Request, SlackUser } from "./types";
-import { ChannelName } from "../common/config";
+import { ChannelName, Branch } from "../common/config";
 import { handleItemAdded } from "./autoMerge";
 import { checkSignature } from "../common/checkSignature";
 import { Conversation } from "../common/types";
+import { getMergeableItems, getQueue } from "../graphql/queue";
 
 dotenv.config();
 
@@ -62,8 +65,43 @@ const httpTrigger: AzureFunction = async (
   );
 
   context.log(JSON.stringify(req.body));
-  const { action, pull_request, sender } = req.body;
-  const label = (req.body as PullRequestLabeledEvent).label;
+
+  const { sender } = req.body;
+  const { action, pull_request } = req.body as PullRequestEvent;
+  const { label } = req.body as PullRequestLabeledEvent;
+  const { branches, sha, state } = req.body as StatusEvent;
+
+  // A merge was successful, so we can try to merge the next one.
+  if (state === "success") {
+    const matchingBranch = branches.find(({ commit }) => commit.sha === sha);
+
+    // Merges should only happen on the default branch, which can be customised.
+    if (matchingBranch?.name === Branch.DEFAULT) {
+      const channel = channels[ChannelName.MERGE];
+      const queue = await getQueue();
+      const mergeableItems = getMergeableItems(queue);
+
+      if (mergeableItems.length) {
+        const prToMerge = mergeableItems.shift();
+        // TODO: Replace with actual merge request
+        slackWebClient.chat.postMessage({
+          icon_emoji,
+          text: `<${prToMerge.url}|${prToMerge.title}> would have been merged now. Is it a good time?`,
+          channel,
+        });
+      } else {
+        slackWebClient.chat.postMessage({
+          icon_emoji,
+          text:
+            "The last merge was successful, but no PRs are ready to be merged.\nCheck the list and manually merge to start again.",
+          channel,
+        });
+      }
+    }
+
+    context.done();
+    return;
+  }
 
   const labelName = label?.name.toLowerCase();
   const readyForMergeLabel = "ready for merge";

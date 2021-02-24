@@ -1,11 +1,12 @@
 import { HttpRequest } from "@azure/functions";
 import {
   PullRequestEvent,
+  StatusEvent,
   PullRequest,
 } from "@octokit/webhooks-definitions/schema";
 
 export interface Request extends HttpRequest {
-  body: PullRequestEvent;
+  body: PullRequestEvent | StatusEvent;
 }
 
 export type PanelData = {
