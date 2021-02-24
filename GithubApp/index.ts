@@ -136,6 +136,7 @@ const httpTrigger: AzureFunction = async (
       break;
     }
     default:
+      context.log(JSON.stringify(req.body))
       break;
   }
 };
