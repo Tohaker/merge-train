@@ -60,6 +60,8 @@ const httpTrigger: AzureFunction = async (
     (acc, channel) => ((acc[channel.name] = channel.id), acc),
     {}
   );
+
+  context.log(JSON.stringify(req.body));
   const { action, pull_request, sender } = req.body;
   const label = (req.body as PullRequestLabeledEvent).label;
 
@@ -136,7 +138,6 @@ const httpTrigger: AzureFunction = async (
       break;
     }
     default:
-      context.log(JSON.stringify(req.body))
       break;
   }
 };
