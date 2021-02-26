@@ -19,17 +19,37 @@ The proposed contract for interacting with the bot on Slack is as follows:
 
 ## Using the Github App
 
-The Github App function will be invoked whenever whatever webhook you set is triggered. For the purposes of this bot, only Pull Request webhooks (specifically adding and removing labels, and adding reviewers) will cause any real computation to take place.
+The Github App function will be invoked when the chosen webhooks are triggered.
 
 | Action           | Output                                                                                                                                                                                                                                                                                                                                                          |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Labeled          | If the label mentions "Ready for merge", a receipt will be posted to the "merge" Slack channel.                                                                                                                                                                                                                                                                 |
 | Unlabeled        | If the label mentions "Ready for merge", a receipt will be posted to the "merge" Slack channel.                                                                                                                                                                                                                                                                 |
 | Review Requested | A message will be posted to the "reviews" Slack channel, tagging the users requested. To avoid duplicate calls, this app is setup to only look for a `requested_team` property, as this indicates users have been selected from an organisation team by GitHub. If your organisation does not use this, you will need to modify this code to ignore this field. |
+| Status changed   | If you have a CI pipeline linked to Github, Status changes will trigger the webhook. If a status becomes `success` and applies to the default branch (see Configuration below), it will trigger the next PR in the list to be merged.                                                                                                                           |
 
 ## Configuration
 
-Some basic configuration options are available for the GitHub App. The [config](GithubApp/config.ts) file contains a list of channels that correspond the kinds of channels that your Slack Workspace will need. If your channel names vary, you can change them before deployment.
+### Creating the Slack App
+
+You'll need to create a Slack App for deployment. You can find instructions on how to do this [in the Slack API documentation](https://api.slack.com/). At least one [Slash Command](https://api.slack.com/interactivity/slash-commands) will be needed for interactivity with Slack Bot.
+
+### Creating the GitHub App
+
+You'll need to create a GitHub App for deployment. You can find instructions on how to do this [in the GitHub documentation](https://docs.github.com/en/developers/apps/creating-a-github-app). This app will need to be installed in the repository you wish to track, and an additional webhook for Status events will need to be set in the repository.
+
+[![](docs/ghapp_1.png)](docs/ghapp_1.png)
+[![](docs/ghapp_2.png)](docs/ghapp_2.png)
+
+### Code config file
+
+Some basic configuration options are available for the functions. The [config](common/config.ts) file contains these options to be changed;
+
+| Option      | Purpose                                                                                                                                                                      | Default              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| ChannelName | Slack channels where you wish `merge` and `review` messages to be sent. These do not need to be different.                                                                   | `merge`, `reviews`   |
+| Branch      | List of branches that are meaningful within the context of these functions. Only `DEFAULT` is defined, and this corresponds to the default branch of your GitHub repository. | `master`             |
+| icon_emoji  | The emoji to use in Slack messages                                                                                                                                           | `:steam_locomotive:` |
 
 If you want Slack users to be tagged in the reviews, they will need to add their GitHub login ID to their Slack profile under "What I do". If this is not filled, the GitHub ID will be posted instead.
 
@@ -37,22 +57,22 @@ If you want Slack users to be tagged in the reviews, they will need to add their
 
 Deployment is handled through [Terraform](terraform.io), using an Azure Service Principal to autheticate with an Azure account. See the following table for the Environment Variables the deployment expects;
 
-| Variable Name        | Purpose                                                                                                                                                                                                                                          |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ARM_ACCESS_KEY       | The storage access key for saving Terraform state files. If you don't need this, remove the `backend` block from [the provider file](deployment/provider.tf)                                                                                     |
-| ARM_CLIENT_ID        | Azure service principal app ID                                                                                                                                                                                                                   |
-| ARM_CLIENT_SECRET    | Azure service principal password                                                                                                                                                                                                                 |
-| ARM_SUBSCRIPTION_ID  | Azure subscription to deploy to                                                                                                                                                                                                                  |
-| ARM_TENANT_ID        | Azure service principal tenant                                                                                                                                                                                                                   |
-| SLACK_BOT_TOKEN      | Slack OAuth token required for posting and listening to messages                                                                                                                                                                                 |
-| SLACK_SIGNING_SECRET | Secret used to authenticate messages coming from Slack                                                                                                                                                                                           |
-| GHAPP_SECRET         | GitHub App secret required to authenticate messages coming from GitHub                                                                                                                                                                           |
-| GHAPP_PRIVATE_KEY    | The private RSA key generated by GitHub when your app is first created. This is needed to generate JWTs for the GraphQL endpoint to act as your app.                                                                                             |
-| GH_APP_ID            | The GitHub app ID, found on your app's info page.                                                                                                                                                                                                |
-| GH_INSTALLATION_ID   | The ID of the installation that your app should access. You can find information on how to find this [in the GitHub documentation](https://docs.github.com/en/developers/apps/authenticating-with-github-apps#authenticating-as-an-installation) |
-| GH_HOSTNAME          | The hostname for the GraphQL endpoint. If you use public GitHub, **you do not need to set this**; only set it if you have an Enterprise Github app.                                                                                              |
-| GH_OWNER             | The name of the owner of the repository your app will be monitoring. If your repository is `https://github.com/myOrg/hello-world.git` then `myOrg` is the owner.                                                                                 |
-| GH_REPOSITORY        | The name of the repository your app will be monitoring. If your repository is `https://github.com/myOrg/hello-world.git` then `hello-world` is the repository name.                                                                              |
+| Variable Name        | Purpose                                                                                                                                                                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ARM_ACCESS_KEY       | The storage access key for saving Terraform state files. If you don't need this, remove the `backend` block from [the provider file](deployment/provider.tf)                                                                           |
+| ARM_CLIENT_ID        | Azure service principal app ID                                                                                                                                                                                                         |
+| ARM_CLIENT_SECRET    | Azure service principal password                                                                                                                                                                                                       |
+| ARM_SUBSCRIPTION_ID  | Azure subscription to deploy to                                                                                                                                                                                                        |
+| ARM_TENANT_ID        | Azure service principal tenant                                                                                                                                                                                                         |
+| SLACK_BOT_TOKEN      | Slack OAuth token required for posting and listening to messages                                                                                                                                                                       |
+| SLACK_SIGNING_SECRET | Secret used to authenticate messages coming from Slack                                                                                                                                                                                 |
+| GHAPP_SECRET         | GitHub App secret required to authenticate messages coming from GitHub                                                                                                                                                                 |
+| GHAPP_PRIVATE_KEY    | The private RSA key generated by GitHub when your app is first created. This is needed to generate JWTs for the GraphQL endpoint to act as your app.                                                                                   |
+| GH_APP_ID            | The GitHub app ID, found on your app's info page.                                                                                                                                                                                      |
+| GH_INSTALLATION_ID   | The ID of the installation that your app should access. Information on how to find this is [in the GitHub documentation](https://docs.github.com/en/developers/apps/authenticating-with-github-apps#authenticating-as-an-installation) |
+| GH_HOSTNAME          | The hostname for the GraphQL endpoint. If you use public GitHub, **you do not need to set this**; Only set it if you have an Enterprise Github app.                                                                                    |
+| GH_OWNER             | The name of the owner of the repository your app will be monitoring. If your repository is `https://github.com/myOrg/hello-world.git` then `myOrg` is the owner.                                                                       |
+| GH_REPOSITORY        | The name of the repository your app will be monitoring. If your repository is `https://github.com/myOrg/hello-world.git` then `hello-world` is the repository name.                                                                    |
 
 Before running the terraform deployment, you have to package the apps. This can be done by running
 
