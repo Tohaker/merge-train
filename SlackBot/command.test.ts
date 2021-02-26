@@ -25,6 +25,8 @@ describe("Parse Command", () => {
   });
 
   const blocks = (text) => ({
+    response_type: "in_channel",
+    text,
     blocks: [
       {
         type: "section",

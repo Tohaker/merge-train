@@ -1,11 +1,8 @@
-import {
-  createClient,
-  getPullRequestsReadyForMerge,
-  Queue,
-  sortByDate,
-} from "../graphql";
+import { Context } from "@azure/functions";
+import { createClient, getPullRequestsReadyForMerge, Queue } from "../graphql";
+import sortByDate from "../graphql/sortByDate";
 
-export const getList = async (): Promise<string[]> => {
+export const getList = async (context: Context): Promise<string[]> => {
   try {
     const client = await createClient();
     const data = await client<Queue>(getPullRequestsReadyForMerge, {
@@ -22,7 +19,7 @@ export const getList = async (): Promise<string[]> => {
 
     return formattedList;
   } catch (e) {
-    console.log("Couldn't get data from Github: ", e);
+    context.log("Couldn't get data from Github: ", e);
     return [];
   }
 };

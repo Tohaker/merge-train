@@ -1,9 +1,22 @@
-describe("List", () => {
-  let getList: () => Promise<string[]>;
+import { Context } from "@azure/functions";
+import { createClient, getPullRequestsReadyForMerge } from "../graphql";
+import { getList } from "./list";
 
+jest.mock("../graphql");
+
+const mockCreateClient = createClient as jest.MockedFunction<
+  typeof createClient
+>;
+
+describe("List", () => {
   const mockRequest = jest.fn();
-  const mockCreateClient = jest.fn();
+  //@ts-ignore
   mockCreateClient.mockResolvedValue(mockRequest);
+
+  const mockContext: Context = {
+    //@ts-ignore
+    log: jest.fn(),
+  };
 
   const mockData = {
     repository: {
@@ -16,17 +29,6 @@ describe("List", () => {
     },
   };
 
-  beforeEach(() => {
-    jest.mock("../graphql", () => ({
-      createClient: mockCreateClient,
-      getPullRequestsReadyForMerge: "query",
-      Data: jest.requireActual("../graphql").Data,
-      sortByDate: jest.requireActual("../graphql").sortByDate,
-    }));
-
-    getList = require("./list").getList;
-  });
-
   describe("given the data request is successful", () => {
     beforeEach(() => {
       mockRequest.mockResolvedValue(mockData);
@@ -36,9 +38,9 @@ describe("List", () => {
       process.env.GITHUB_OWNER = "owner";
       process.env.GITHUB_REPOSITORY = "repo";
 
-      const list = await getList();
+      const list = await getList(mockContext);
 
-      expect(mockRequest).toBeCalledWith("query", {
+      expect(mockRequest).toBeCalledWith(getPullRequestsReadyForMerge, {
         owner: "owner",
         repo: "repo",
       });
@@ -55,9 +57,9 @@ describe("List", () => {
       process.env.GITHUB_OWNER = "owner";
       process.env.GITHUB_REPOSITORY = "repo";
 
-      const list = await getList();
+      const list = await getList(mockContext);
 
-      expect(mockRequest).toBeCalledWith("query", {
+      expect(mockRequest).toBeCalledWith(getPullRequestsReadyForMerge, {
         owner: "owner",
         repo: "repo",
       });

@@ -1,4 +1,5 @@
 import { Context } from "@azure/functions";
+import { RespondFn } from "@slack/bolt";
 import {
   helpText,
   invalidCommand,
@@ -7,7 +8,6 @@ import {
   listSuccess,
 } from "./constants";
 import { getList } from "./list";
-import { RespondProps } from "./types";
 
 enum CommandType {
   NEXT = "next",
@@ -18,7 +18,7 @@ enum CommandType {
 type Props = {
   text: string;
   context: Context;
-  respond: (args: RespondProps) => Promise<any>;
+  respond: RespondFn;
 };
 
 const createMarkdownList = (items: any[]) =>
@@ -30,6 +30,8 @@ export const parseCommand = async ({ text, context, respond }: Props) => {
 
   const sendMessage = (text: string) =>
     respond({
+      response_type: "in_channel",
+      text,
       blocks: [
         {
           type: "section",
@@ -50,7 +52,7 @@ export const parseCommand = async ({ text, context, respond }: Props) => {
     return;
   }
 
-  const list = await getList();
+  const list = await getList(context);
 
   switch (commandType) {
     case CommandType.NEXT:

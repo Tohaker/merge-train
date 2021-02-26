@@ -1,10 +1,8 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
-import fetch from "node-fetch";
-import queryString from "query-string";
+import { App } from "@slack/bolt";
+import { AzureFunctionsReceiver } from "bolt-azure-functions-receiver";
 import dotenv from "dotenv";
 import { parseCommand } from "./command";
-import { checkSignature } from "./checkSignature";
-import { Body, RespondProps } from "./types";
 
 dotenv.config();
 
@@ -12,32 +10,21 @@ const httpTrigger: AzureFunction = async function (
   context: Context,
   req: HttpRequest
 ): Promise<void> {
-  const parsed = queryString.parse(req.body) as Body;
-  const respond = ({ blocks, text, response_type }: RespondProps) =>
-    fetch(parsed.response_url, {
-      method: "POST",
-      body: JSON.stringify({
-        mrkdwn: true,
-        blocks,
-        text,
-        response_type,
-      }),
-    });
+  const signingSecret = process.env.SLACK_SIGNING_SECRET;
+  const receiver = new AzureFunctionsReceiver(signingSecret, context.log);
+  const app = new App({
+    token: process.env.SLACK_BOT_TOKEN,
+    signingSecret,
+    receiver,
+  });
 
-  if (
-    !checkSignature(
-      req.headers["x-slack-signature"],
-      `v0:${req.headers["x-slack-request-timestamp"]}:${req.rawBody}`
-    )
-  ) {
-    context.done(null, { status: 401, body: "Signature does not match" });
-    return;
-  }
-
-  if (parsed.command === "/merge" || parsed.command === "/test") {
-    const { text } = parsed;
+  app.command("/merge", async ({ command: { text }, respond, ack }) => {
+    await ack();
     await parseCommand({ text, context, respond });
-  }
+  });
+
+  const body = await receiver.requestHandler(req);
+  context.log(body);
 
   context.done(null, { status: 200 });
 };
