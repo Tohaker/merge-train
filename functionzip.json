@@ -6,7 +6,6 @@
     "dist/graphql",
     "dist/GithubApp",
     "dist/SlackBot",
-    "dist/MergeNext",
     "node_modules",
     "host.json",
     "proxies.json"
