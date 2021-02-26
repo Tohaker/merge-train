@@ -10,6 +10,9 @@ describe("Parse Command", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    jest.mock("../common/config", () => ({
+      icon_emoji: "emoji",
+    }));
     jest.mock("./constants", () => ({
       helpText: "help",
       invalidCommand: "invalid",
@@ -25,6 +28,7 @@ describe("Parse Command", () => {
   });
 
   const blocks = (text) => ({
+    icon_emoji: "emoji",
     response_type: "in_channel",
     text,
     blocks: [
@@ -39,6 +43,7 @@ describe("Parse Command", () => {
   });
 
   const response = (text) => ({
+    icon_emoji: "emoji",
     response_type: "ephemeral",
     text,
   });

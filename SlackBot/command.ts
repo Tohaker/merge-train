@@ -1,5 +1,6 @@
 import { Context } from "@azure/functions";
 import { RespondFn } from "@slack/bolt";
+import { icon_emoji } from "../common/config";
 import {
   helpText,
   invalidCommand,
@@ -26,10 +27,11 @@ const createMarkdownList = (items: any[]) =>
 
 export const parseCommand = async ({ text, context, respond }: Props) => {
   const sendEphemeralMessage = (text: string) =>
-    respond({ response_type: "ephemeral", text });
+    respond({ icon_emoji, response_type: "ephemeral", text });
 
   const sendMessage = (text: string) =>
     respond({
+      icon_emoji,
       response_type: "in_channel",
       text,
       blocks: [

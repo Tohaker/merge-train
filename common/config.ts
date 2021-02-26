@@ -8,3 +8,5 @@ export enum ChannelName {
 export enum Branch {
   DEFAULT = "master",
 }
+
+export const icon_emoji = ":steam_locomotive:";
