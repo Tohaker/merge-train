@@ -10,11 +10,10 @@ import {
 import dotenv from "dotenv";
 import { createSlackPanel } from "./slack";
 import { Request, SlackUser } from "./types";
-import { ChannelName, Branch } from "../common/config";
-import { handleItemAdded } from "./autoMerge";
+import { ChannelName, icon_emoji } from "../common/config";
+import { handleItemAdded, handleStateReported } from "./autoMerge";
 import { checkSignature } from "../common/checkSignature";
 import { Conversation } from "../common/types";
-import { getMergeableItems, getQueue } from "../graphql/queue";
 
 dotenv.config();
 
@@ -55,7 +54,6 @@ const httpTrigger: AzureFunction = async (
   }
 
   const slackWebClient = new WebClient(process.env.SLACK_BOT_TOKEN);
-  const icon_emoji = ":steam_locomotive:";
   const channels: Record<
     string,
     string
@@ -69,35 +67,15 @@ const httpTrigger: AzureFunction = async (
   const { sender } = req.body;
   const { action, pull_request } = req.body as PullRequestEvent;
   const { label } = req.body as PullRequestLabeledEvent;
-  const { branches, sha, state } = req.body as StatusEvent;
+  const { state } = req.body as StatusEvent;
 
   // A merge was successful, so we can try to merge the next one.
   if (state === "success") {
-    const matchingBranch = branches.find(({ commit }) => commit.sha === sha);
-
-    // Merges should only happen on the default branch, which can be customised.
-    if (matchingBranch?.name === Branch.DEFAULT) {
-      const channel = channels[ChannelName.MERGE];
-      const queue = await getQueue();
-      const mergeableItems = getMergeableItems(queue);
-
-      if (mergeableItems.length) {
-        const prToMerge = mergeableItems.shift();
-        // TODO: Replace with actual merge request
-        slackWebClient.chat.postMessage({
-          icon_emoji,
-          text: `<${prToMerge.url}|${prToMerge.title}> would have been merged now. Is it a good time?`,
-          channel,
-        });
-      } else {
-        slackWebClient.chat.postMessage({
-          icon_emoji,
-          text:
-            "The last merge was successful, but no PRs are ready to be merged.\nCheck the list and manually merge to start again.",
-          channel,
-        });
-      }
-    }
+    handleStateReported(
+      slackWebClient,
+      req.body as StatusEvent,
+      channels[ChannelName.MERGE]
+    );
 
     context.done();
     return;
@@ -125,7 +103,7 @@ const httpTrigger: AzureFunction = async (
           channel,
           text: headline,
         });
-        await handleItemAdded(slackWebClient, pull_request, channel);
+        await handleItemAdded(slackWebClient, pull_request, channel, context);
       }
       break;
     }

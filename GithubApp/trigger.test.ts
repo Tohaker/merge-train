@@ -28,22 +28,23 @@ describe("HTTP Trigger", () => {
   const mockGetMergeableItems = jest.fn();
   const mockGetQueue = jest.fn();
 
-  mockWebClient.mockImplementation(() => ({
-    //@ts-ignore
+  const webClient = {
     users: {
       list: mockListUsers,
     },
     conversations: {
-      //@ts-ignore
       list: mockListConversations,
     },
-    //@ts-ignore
     chat: {
       postMessage: mockPostMessage,
     },
-  }));
+  };
+
+  //@ts-ignore
+  mockWebClient.mockImplementation(() => webClient);
 
   const mockHandleItemAdded = jest.fn();
+  const mockHandleStateReported = jest.fn();
 
   const mockContext = {
     log: jest.fn(),
@@ -95,9 +96,11 @@ describe("HTTP Trigger", () => {
     jest.mock("../common/config", () => ({
       ChannelName,
       Branch,
+      icon_emoji: "emoji",
     }));
     jest.mock("./autoMerge", () => ({
       handleItemAdded: mockHandleItemAdded,
+      handleStateReported: mockHandleStateReported,
     }));
     jest.mock("../graphql/queue", () => ({
       getMergeableItems: mockGetMergeableItems,
@@ -146,18 +149,19 @@ describe("HTTP Trigger", () => {
     });
 
     describe("given a status webhook is received", () => {
+      afterEach(() => {
+        mockRequest.body["state"] = undefined;
+      });
+
       describe("given the state is not success", () => {
         beforeEach(() => {
           mockRequest.body["state"] = "failed";
         });
 
-        afterEach(() => {
-          mockRequest.body["state"] = undefined;
-        });
-
         it("should do nothing", async () => {
           await httpTrigger(mockContext, mockRequest);
 
+          expect(mockHandleStateReported).not.toBeCalled();
           expect(mockPostMessage).not.toBeCalled();
         });
       });
@@ -165,53 +169,17 @@ describe("HTTP Trigger", () => {
       describe("given the state is success", () => {
         beforeEach(() => {
           mockRequest.body["state"] = "success";
-          mockRequest.body["branches"] = [
-            { name: "master", commit: { sha: "1234" } },
-            { name: "some-branch", commit: { sha: "1357" } },
-          ];
-          mockRequest.body["sha"] = "1234";
         });
 
-        afterEach(() => {
-          mockRequest.body["state"] = undefined;
-        });
+        it("should handleStateReported", async () => {
+          await httpTrigger(mockContext, mockRequest);
 
-        describe("given there are mergeable items", () => {
-          beforeEach(() => {
-            mockGetMergeableItems.mockReturnValue([
-              { url: "https://some.url", title: "title" },
-              { url: "https://some2.url", title: "title2" },
-            ]);
-          });
-
-          it("should post a message", async () => {
-            await httpTrigger(mockContext, mockRequest);
-
-            expect(mockPostMessage).toBeCalledWith({
-              icon_emoji: ":steam_locomotive:",
-              text: `<https://some.url|title> would have been merged now. Is it a good time?`,
-              channel: "1234",
-            });
-            expect(mockPostMessage).toBeCalledTimes(1);
-          });
-        });
-
-        describe("given there are no mergeable items", () => {
-          beforeEach(() => {
-            mockGetMergeableItems.mockReturnValue([]);
-          });
-
-          it("should post a message", async () => {
-            await httpTrigger(mockContext, mockRequest);
-
-            expect(mockPostMessage).toBeCalledWith({
-              icon_emoji: ":steam_locomotive:",
-              text:
-                "The last merge was successful, but no PRs are ready to be merged.\nCheck the list and manually merge to start again.",
-              channel: "1234",
-            });
-            expect(mockPostMessage).toBeCalledTimes(1);
-          });
+          expect(mockHandleStateReported).toBeCalledWith(
+            webClient,
+            mockRequest.body,
+            "1234"
+          );
+          expect(mockPostMessage).not.toBeCalled();
         });
       });
     });
@@ -231,7 +199,7 @@ describe("HTTP Trigger", () => {
           await httpTrigger(mockContext, mockRequest);
 
           expect(mockPostMessage).toBeCalledWith({
-            icon_emoji: ":steam_locomotive:",
+            icon_emoji: "emoji",
             text: "A new PR is ready to merge",
             blocks: "blocks",
             channel: "1234",
@@ -267,7 +235,7 @@ describe("HTTP Trigger", () => {
           await httpTrigger(mockContext, mockRequest);
 
           expect(mockPostMessage).toBeCalledWith({
-            icon_emoji: ":steam_locomotive:",
+            icon_emoji: "emoji",
             text: "A PR has had its status changed",
             blocks: "blocks",
             channel: "1234",
@@ -336,7 +304,7 @@ describe("HTTP Trigger", () => {
               tag: "<@id2>",
             });
             expect(mockPostMessage).toBeCalledWith({
-              icon_emoji: ":steam_locomotive:",
+              icon_emoji: "emoji",
               text: "A PR has been marked for review",
               blocks: "blocks",
               channel: "4567",
@@ -378,7 +346,7 @@ describe("HTTP Trigger", () => {
               tag: "username2",
             });
             expect(mockPostMessage).toBeCalledWith({
-              icon_emoji: ":steam_locomotive:",
+              icon_emoji: "emoji",
               text: "A PR has been marked for review",
               blocks: "blocks",
               channel: "4567",
