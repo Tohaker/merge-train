@@ -22,7 +22,6 @@ export const createClient = async () => {
     (
       await auth({
         type: "installation",
-        permissions: { pull_requests: "write" },
       })
     ).token
   );
