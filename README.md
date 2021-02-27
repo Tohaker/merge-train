@@ -36,7 +36,16 @@ You'll need to create a Slack App for deployment. You can find instructions on h
 
 ### Creating the GitHub App
 
-You'll need to create a GitHub App for deployment. You can find instructions on how to do this [in the GitHub documentation](https://docs.github.com/en/developers/apps/creating-a-github-app). This app will need to be installed in the repository you wish to track, and an additional webhook for Status events will need to be set in the repository.
+You'll need to create a GitHub App for deployment. You can find instructions on how to do this [in the GitHub documentation](https://docs.github.com/en/developers/apps/creating-a-github-app).
+
+The following App permissions will need to be set:
+
+| Permission      | Level        |
+| --------------- | ------------ |
+| Pull requests   | Read & Write |
+| Commit statuses | Read-only    |
+
+This app will need to be installed in the repository you wish to track, and an additional webhook for Status events will need to be set in the repository.
 
 [![](docs/ghapp_1.png)](docs/ghapp_1.png)
 [![](docs/ghapp_2.png)](docs/ghapp_2.png)
