@@ -45,11 +45,12 @@ You'll need to create a GitHub App for deployment. You can find instructions on 
 
 Some basic configuration options are available for the functions. The [config](common/config.ts) file contains these options to be changed;
 
-| Option      | Purpose                                                                                                                                                                      | Default              |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| ChannelName | Slack channels where you wish `merge` and `review` messages to be sent. These do not need to be different.                                                                   | `merge`, `reviews`   |
-| Branch      | List of branches that are meaningful within the context of these functions. Only `DEFAULT` is defined, and this corresponds to the default branch of your GitHub repository. | `master`             |
-| icon_emoji  | The emoji to use in Slack messages                                                                                                                                           | `:steam_locomotive:` |
+| Option      | Purpose                                                                                                                                                                      | Default                                 |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| ChannelName | Slack channels where you wish `merge` and `review` messages to be sent. These do not need to be different.                                                                   | `merge`, `reviews`                      |
+| Branch      | List of branches that are meaningful within the context of these functions. Only `DEFAULT` is defined, and this corresponds to the default branch of your GitHub repository. | `master`                                |
+| Label       | Label names used in Github to represent various PR states                                                                                                                    | `ready for merge`, `merge train paused` |
+| icon_emoji  | The emoji to use in Slack messages                                                                                                                                           | `:steam_locomotive:`                    |
 
 If you want Slack users to be tagged in the reviews, they will need to add their GitHub login ID to their Slack profile under "What I do". If this is not filled, the GitHub ID will be posted instead.
 

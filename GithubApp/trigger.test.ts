@@ -83,8 +83,8 @@ describe("HTTP Trigger", () => {
     REVIEWS = "reviews",
   }
 
-  enum Branch {
-    DEFAULT = "master",
+  enum Label {
+    READY_FOR_MERGE = "ready for merge",
   }
 
   beforeEach(() => {
@@ -95,7 +95,7 @@ describe("HTTP Trigger", () => {
     jest.mock("./slack", () => mockSlack);
     jest.mock("../common/config", () => ({
       ChannelName,
-      Branch,
+      Label,
       icon_emoji: "emoji",
     }));
     jest.mock("./autoMerge", () => ({

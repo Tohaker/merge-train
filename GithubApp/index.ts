@@ -10,7 +10,7 @@ import {
 import dotenv from "dotenv";
 import { createSlackPanel } from "./slack";
 import { Request, SlackUser } from "./types";
-import { ChannelName, icon_emoji } from "../common/config";
+import { ChannelName, Label, icon_emoji } from "../common/config";
 import { handleItemAdded, handleStateReported } from "./autoMerge";
 import { checkSignature } from "../common/checkSignature";
 import { Conversation } from "../common/types";
@@ -82,7 +82,7 @@ const httpTrigger: AzureFunction = async (
   }
 
   const labelName = label?.name.toLowerCase();
-  const readyForMergeLabel = "ready for merge";
+  const readyForMergeLabel = Label.READY_FOR_MERGE;
 
   switch (action) {
     case "labeled": {
