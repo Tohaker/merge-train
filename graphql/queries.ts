@@ -9,6 +9,28 @@ export const getPullRequestsReadyForMerge = `
           timelineItems(itemTypes: [LABELED_EVENT], last: 1) {
             updatedAt
           }
+          labels(last: 5) {
+            nodes{
+              name
+            }
+          }
+          commits(last: 1) {
+            nodes {
+              commit {
+                status {
+                  state
+                  contexts {
+                    description
+                    state
+                    targetUrl
+                    creator {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }

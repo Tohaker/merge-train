@@ -4,6 +4,7 @@ import {
   getPullRequestsReadyForMerge,
   Queue,
 } from ".";
+import { Label } from "../common/config";
 
 export const getQueue = async () => {
   const client = await createClient();
@@ -28,7 +29,12 @@ export const getMergeableItems = (queue: Queue) => {
 
   if (nodes.length) {
     return sortByDate(
-      nodes.filter(({ mergeable }) => mergeable === "MERGEABLE")
+      nodes.filter(
+        ({ mergeable, commits, labels }) =>
+          mergeable === "MERGEABLE" &&
+          commits?.nodes[0].commit.status.state === "SUCCESS" &&
+          !labels?.nodes.some(({ name }) => name === Label.MERGE_TRAIN_PAUSED)
+      )
     );
   } else {
     return [];
