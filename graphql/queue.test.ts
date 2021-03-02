@@ -5,6 +5,10 @@ describe("Queue", () => {
   const mockClient = jest.fn();
   const mockQuery = "query";
 
+  const mockContext = {
+    log: jest.fn(),
+  };
+
   beforeEach(() => {
     jest.mock("../graphql", () => ({
       createClient: mockCreateClient,
@@ -298,7 +302,9 @@ describe("Queue", () => {
     ])(
       "should return whether the queue has mergeable items",
       (mockQueue, expected) => {
-        expect(queue.getMergeableItems(mockQueue)).toEqual(expected);
+        expect(queue.getMergeableItems(mockQueue, mockContext)).toEqual(
+          expected
+        );
       }
     );
   });

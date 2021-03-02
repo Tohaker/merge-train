@@ -1,3 +1,5 @@
+import { Context } from "@azure/functions";
+import { PullRequest } from "@octokit/graphql-schema";
 import {
   createClient,
   sortByDate,
@@ -24,18 +26,25 @@ export const hasItems = (queue: Queue) => {
   return getItems(queue).length > 0;
 };
 
-export const getMergeableItems = (queue: Queue) => {
+const isMergeable = (node: PullRequest, context: Context) => {
+  const { mergeable, commits, labels } = node;
+
+  context.log("Mergeable - ", mergeable);
+  context.log("Last commit state - ", commits?.nodes[0].commit.status.state);
+  context.log("Labels - ", JSON.stringify(labels?.nodes));
+
+  return (
+    mergeable === "MERGEABLE" &&
+    commits?.nodes[0].commit.status.state === "SUCCESS" &&
+    !labels?.nodes.some(({ name }) => name === Label.MERGE_TRAIN_PAUSED)
+  );
+};
+
+export const getMergeableItems = (queue: Queue, context: Context) => {
   const { nodes } = queue.repository.pullRequests;
 
   if (nodes.length) {
-    return sortByDate(
-      nodes.filter(
-        ({ mergeable, commits, labels }) =>
-          mergeable === "MERGEABLE" &&
-          commits?.nodes[0].commit.status.state === "SUCCESS" &&
-          !labels?.nodes.some(({ name }) => name === Label.MERGE_TRAIN_PAUSED)
-      )
-    );
+    return sortByDate(nodes.filter((node) => isMergeable(node, context)));
   } else {
     return [];
   }

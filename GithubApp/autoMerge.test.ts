@@ -24,6 +24,11 @@ const mockWebClient: WebClient = {
   },
 };
 
+const mockContext: Context = {
+  //@ts-ignore
+  log: jest.fn(),
+};
+
 describe("handleItemAdded", () => {
   //@ts-ignore
   const mockPR: PullRequest = {
@@ -33,11 +38,6 @@ describe("handleItemAdded", () => {
     updated_at: "2000",
     requested_reviewers: [],
     mergeable: true,
-  };
-
-  const mockContext: Context = {
-    //@ts-ignore
-    log: jest.fn(),
   };
 
   describe("given the queue has 2 items", () => {
@@ -120,7 +120,7 @@ describe("handleStateReported", () => {
     });
 
     it("should do nothing", async () => {
-      await handleStateReported(mockWebClient, mockBody, "1234");
+      await handleStateReported(mockWebClient, mockBody, "1234", mockContext);
 
       expect(mockGetMergeableItems).not.toBeCalled();
       expect(mockWebClient.chat.postMessage).not.toBeCalled();
@@ -145,7 +145,7 @@ describe("handleStateReported", () => {
       });
 
       it("should post a message", async () => {
-        await handleStateReported(mockWebClient, mockBody, "1234");
+        await handleStateReported(mockWebClient, mockBody, "1234", mockContext);
 
         expect(mockWebClient.chat.postMessage).toBeCalledWith({
           icon_emoji: "emoji",
@@ -162,7 +162,7 @@ describe("handleStateReported", () => {
       });
 
       it("should post a message", async () => {
-        await handleStateReported(mockWebClient, mockBody, "1234");
+        await handleStateReported(mockWebClient, mockBody, "1234", mockContext);
 
         expect(mockWebClient.chat.postMessage).toBeCalledWith({
           icon_emoji: "emoji",
