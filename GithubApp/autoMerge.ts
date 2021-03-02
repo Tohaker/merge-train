@@ -59,7 +59,7 @@ export const handleStateReported = async (
       await client.chat.postMessage({
         icon_emoji,
         text:
-          "The last merge was successful, but no PRs are ready to be merged.\nCheck the list and manually merge to start again.",
+          "The merge train has pulled into the station; no PRs left to merge. All aboard!",
         channel,
       });
     }

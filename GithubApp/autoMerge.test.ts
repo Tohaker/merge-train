@@ -167,7 +167,7 @@ describe("handleStateReported", () => {
         expect(mockWebClient.chat.postMessage).toBeCalledWith({
           icon_emoji: "emoji",
           text:
-            "The last merge was successful, but no PRs are ready to be merged.\nCheck the list and manually merge to start again.",
+            "The merge train has pulled into the station; no PRs left to merge. All aboard!",
           channel: "1234",
         });
         expect(mockWebClient.chat.postMessage).toBeCalledTimes(1);
