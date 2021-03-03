@@ -74,8 +74,7 @@ const httpTrigger: AzureFunction = async (
     handleStateReported(
       slackWebClient,
       req.body as StatusEvent,
-      channels[ChannelName.MERGE],
-      context
+      channels[ChannelName.MERGE]
     );
 
     context.done();

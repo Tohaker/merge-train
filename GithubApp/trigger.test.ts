@@ -177,8 +177,7 @@ describe("HTTP Trigger", () => {
           expect(mockHandleStateReported).toBeCalledWith(
             webClient,
             mockRequest.body,
-            "1234",
-            mockContext
+            "1234"
           );
           expect(mockPostMessage).not.toBeCalled();
         });

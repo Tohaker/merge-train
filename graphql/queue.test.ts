@@ -5,10 +5,6 @@ describe("Queue", () => {
   const mockClient = jest.fn();
   const mockQuery = "query";
 
-  const mockContext = {
-    log: jest.fn(),
-  };
-
   beforeEach(() => {
     jest.mock("../graphql", () => ({
       createClient: mockCreateClient,
@@ -19,6 +15,8 @@ describe("Queue", () => {
     jest.mock("../common/config", () => ({
       Label: { MERGE_TRAIN_PAUSED: "merge train paused" },
     }));
+
+    jest.spyOn(console, "log").mockImplementation(() => {});
 
     queue = require("./queue");
   });
@@ -302,9 +300,7 @@ describe("Queue", () => {
     ])(
       "should return whether the queue has mergeable items",
       (mockQueue, expected) => {
-        expect(queue.getMergeableItems(mockQueue, mockContext)).toEqual(
-          expected
-        );
+        expect(queue.getMergeableItems(mockQueue)).toEqual(expected);
       }
     );
   });

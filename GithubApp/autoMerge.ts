@@ -37,8 +37,7 @@ export const handleItemAdded = async (
 export const handleStateReported = async (
   client: WebClient,
   body: StatusEvent,
-  channel: string,
-  context: Context
+  channel: string
 ) => {
   const { branches, sha } = body;
   const matchingBranch = branches.find(({ commit }) => commit.sha === sha);
@@ -46,7 +45,7 @@ export const handleStateReported = async (
   // Merges should only happen on the default branch, which can be customised.
   if (matchingBranch?.name === Branch.DEFAULT) {
     const queue = await getQueue();
-    const mergeableItems = getMergeableItems(queue, context);
+    const mergeableItems = getMergeableItems(queue);
 
     if (mergeableItems.length) {
       const prToMerge = mergeableItems.shift();

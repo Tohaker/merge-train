@@ -26,12 +26,12 @@ export const hasItems = (queue: Queue) => {
   return getItems(queue).length > 0;
 };
 
-const isMergeable = (node: PullRequest, context: Context) => {
+const isMergeable = (node: PullRequest) => {
   const { mergeable, commits, labels } = node;
 
-  context.log("Mergeable - ", mergeable);
-  context.log("Last commit state - ", commits?.nodes[0].commit.status.state);
-  context.log("Labels - ", JSON.stringify(labels?.nodes));
+  console.log("Mergeable - ", mergeable);
+  console.log("Last commit state - ", commits?.nodes[0].commit.status.state);
+  console.log("Labels - ", JSON.stringify(labels?.nodes));
 
   return (
     mergeable === "MERGEABLE" &&
@@ -40,11 +40,11 @@ const isMergeable = (node: PullRequest, context: Context) => {
   );
 };
 
-export const getMergeableItems = (queue: Queue, context: Context) => {
+export const getMergeableItems = (queue: Queue) => {
   const { nodes } = queue.repository.pullRequests;
 
   if (nodes.length) {
-    return sortByDate(nodes.filter((node) => isMergeable(node, context)));
+    return sortByDate(nodes.filter((node) => isMergeable(node)));
   } else {
     return [];
   }

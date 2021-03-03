@@ -120,7 +120,7 @@ describe("handleStateReported", () => {
     });
 
     it("should do nothing", async () => {
-      await handleStateReported(mockWebClient, mockBody, "1234", mockContext);
+      await handleStateReported(mockWebClient, mockBody, "1234");
 
       expect(mockGetMergeableItems).not.toBeCalled();
       expect(mockWebClient.chat.postMessage).not.toBeCalled();
@@ -145,7 +145,7 @@ describe("handleStateReported", () => {
       });
 
       it("should post a message", async () => {
-        await handleStateReported(mockWebClient, mockBody, "1234", mockContext);
+        await handleStateReported(mockWebClient, mockBody, "1234");
 
         expect(mockWebClient.chat.postMessage).toBeCalledWith({
           icon_emoji: "emoji",
@@ -162,7 +162,7 @@ describe("handleStateReported", () => {
       });
 
       it("should post a message", async () => {
-        await handleStateReported(mockWebClient, mockBody, "1234", mockContext);
+        await handleStateReported(mockWebClient, mockBody, "1234");
 
         expect(mockWebClient.chat.postMessage).toBeCalledWith({
           icon_emoji: "emoji",
