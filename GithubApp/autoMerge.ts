@@ -21,7 +21,7 @@ export const handleItemAdded = async (
     // TODO: Replace with actual merge request
     await client.chat.postMessage({
       icon_emoji,
-      text: `I would have merged <${pullRequest.url}|${pullRequest.title}> now, is it a good time?`,
+      text: `<${pullRequest.html_url}|${pullRequest.title}> would have been merged now, is it a good time?`,
       channel,
     });
   } else {

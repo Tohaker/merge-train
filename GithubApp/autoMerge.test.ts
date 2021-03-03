@@ -32,7 +32,7 @@ const mockContext: Context = {
 describe("handleItemAdded", () => {
   //@ts-ignore
   const mockPR: PullRequest = {
-    url: "mockUrl",
+    html_url: "mockUrl",
     title: "PR",
     created_at: "1000",
     updated_at: "2000",
@@ -84,7 +84,7 @@ describe("handleItemAdded", () => {
         await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
         expect(mockWebClient.chat.postMessage).toBeCalledWith({
           icon_emoji: "emoji",
-          text: "I would have merged <mockUrl|PR> now, is it a good time?",
+          text: "<mockUrl|PR> would have been merged now, is it a good time?",
           channel: "channel",
         });
       });
