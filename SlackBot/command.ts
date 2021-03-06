@@ -76,9 +76,11 @@ export const parseCommand = async ({ text, respond }: Props) => {
     case CommandType.PAUSE:
       if (await pauseAll()) await sendMessage(pauseSuccess);
       else await sendMessage(pauseFailure);
+      break;
     case CommandType.RESUME:
       if (await resumeAll()) await sendMessage(resumeSuccess);
       else await sendMessage(resumeFailure);
+      break;
     case CommandType.HELP:
       await sendEphemeralMessage(helpText);
       break;

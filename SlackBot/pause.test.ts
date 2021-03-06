@@ -178,7 +178,7 @@ describe("Pause functions", () => {
         expect(mockRequest).toBeCalledWith("get labels", {
           owner: "owner",
           repo: "repo",
-          labelToApply: "ready for merge",
+          labelToApply: "merge train paused",
           labelsOnPullRequests: "merge train paused",
         });
 
@@ -204,7 +204,7 @@ describe("Pause functions", () => {
         expect(mockRequest).toBeCalledWith("get labels", {
           owner: "owner",
           repo: "repo",
-          labelToApply: "ready for merge",
+          labelToApply: "merge train paused",
           labelsOnPullRequests: "merge train paused",
         });
 
@@ -238,7 +238,7 @@ describe("Pause functions", () => {
         expect(mockRequest).toBeCalledWith("get labels", {
           owner: "owner",
           repo: "repo",
-          labelToApply: "ready for merge",
+          labelToApply: "merge train paused",
           labelsOnPullRequests: "merge train paused",
         });
 
@@ -269,7 +269,7 @@ describe("Pause functions", () => {
         expect(mockRequest).toBeCalledWith("get labels", {
           owner: "owner",
           repo: "repo",
-          labelToApply: "ready for merge",
+          labelToApply: "merge train paused",
           labelsOnPullRequests: "merge train paused",
         });
 

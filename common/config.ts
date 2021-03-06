@@ -10,7 +10,7 @@ export enum Branch {
 }
 
 export enum Label {
-  READY_FOR_MERGE = "ready for merge",
+  READY_FOR_MERGE = "Ready for merge",
   MERGE_TRAIN_PAUSED = "merge train paused",
 }
 

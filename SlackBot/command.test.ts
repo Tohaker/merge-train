@@ -9,6 +9,7 @@ describe("Parse Command", () => {
   let parseCommand;
 
   beforeEach(() => {
+    jest.spyOn(console, "log").mockImplementation(() => {});
     jest.clearAllMocks();
 
     jest.mock("../common/config", () => ({

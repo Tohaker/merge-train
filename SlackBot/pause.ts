@@ -9,7 +9,6 @@ import { Label } from "../common/config";
 
 const changeLabelsOnPullRequests = async (
   query: string,
-  labelToApply: Label,
   labelsOnPullRequests: Label
 ): Promise<boolean> => {
   try {
@@ -17,7 +16,7 @@ const changeLabelsOnPullRequests = async (
     const data = await client<Queue>(getLabelsAndPullRequests, {
       owner: process.env.GITHUB_OWNER,
       repo: process.env.GITHUB_REPOSITORY,
-      labelToApply,
+      labelToApply: Label.MERGE_TRAIN_PAUSED,
       labelsOnPullRequests,
     });
 
@@ -44,15 +43,10 @@ const changeLabelsOnPullRequests = async (
 };
 
 export const pauseAll = () =>
-  changeLabelsOnPullRequests(
-    addLabelToPullRequest,
-    Label.MERGE_TRAIN_PAUSED,
-    Label.READY_FOR_MERGE
-  );
+  changeLabelsOnPullRequests(addLabelToPullRequest, Label.READY_FOR_MERGE);
 
 export const resumeAll = () =>
   changeLabelsOnPullRequests(
     removeLabelFromPullRequest,
-    Label.READY_FOR_MERGE,
     Label.MERGE_TRAIN_PAUSED
   );

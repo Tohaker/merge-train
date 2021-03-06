@@ -81,12 +81,11 @@ const httpTrigger: AzureFunction = async (
     return;
   }
 
-  const labelName = label?.name.toLowerCase();
-  const readyForMergeLabel = Label.READY_FOR_MERGE;
+  const labelName = label?.name;
 
   switch (action) {
     case "labeled": {
-      if (labelName.includes(readyForMergeLabel)) {
+      if (labelName === Label.READY_FOR_MERGE) {
         const channel = channels[ChannelName.MERGE];
         const headline = "A new PR is ready to merge";
 
@@ -108,7 +107,7 @@ const httpTrigger: AzureFunction = async (
       break;
     }
     case "unlabeled": {
-      if (labelName.includes(readyForMergeLabel)) {
+      if (labelName === Label.READY_FOR_MERGE) {
         const channel = channels[ChannelName.MERGE];
         const headline = "A PR has had its status changed";
 

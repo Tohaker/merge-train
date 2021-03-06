@@ -189,9 +189,9 @@ describe("HTTP Trigger", () => {
         mockRequest.body.action = "labeled";
       });
 
-      describe("given the label name is Ready for merge", () => {
+      describe("given the label name is ready for merge", () => {
         beforeEach(() => {
-          mockRequest.body.label.name = "Ready for merge";
+          mockRequest.body.label.name = "ready for merge";
         });
 
         it("should post a message", async () => {
@@ -225,9 +225,9 @@ describe("HTTP Trigger", () => {
         mockRequest.body.action = "unlabeled";
       });
 
-      describe("given the label name is Ready for merge", () => {
+      describe("given the label name is ready for merge", () => {
         beforeEach(() => {
-          mockRequest.body.label.name = "Ready for merge";
+          mockRequest.body.label.name = "ready for merge";
         });
 
         it("should post a message", async () => {
