@@ -1,4 +1,3 @@
-import { Context } from "@azure/functions";
 import { createClient, getPullRequestsReadyForMerge } from "../graphql";
 import { getList } from "./list";
 
@@ -13,10 +12,7 @@ describe("List", () => {
   //@ts-ignore
   mockCreateClient.mockResolvedValue(mockRequest);
 
-  const mockContext: Context = {
-    //@ts-ignore
-    log: jest.fn(),
-  };
+  jest.spyOn(console, "error").mockImplementation(() => {});
 
   const mockData = {
     repository: {
@@ -38,7 +34,7 @@ describe("List", () => {
       process.env.GITHUB_OWNER = "owner";
       process.env.GITHUB_REPOSITORY = "repo";
 
-      const list = await getList(mockContext);
+      const list = await getList();
 
       expect(mockRequest).toBeCalledWith(getPullRequestsReadyForMerge, {
         owner: "owner",
@@ -57,7 +53,7 @@ describe("List", () => {
       process.env.GITHUB_OWNER = "owner";
       process.env.GITHUB_REPOSITORY = "repo";
 
-      const list = await getList(mockContext);
+      const list = await getList();
 
       expect(mockRequest).toBeCalledWith(getPullRequestsReadyForMerge, {
         owner: "owner",

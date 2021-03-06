@@ -36,3 +36,50 @@ export const getPullRequestsReadyForMerge = `
     }
   }
 `;
+
+export const getLabelsAndPullRequests = `
+  query GetLabels($owner: String!, $repo: String!, $labelToApply: String!, $labelsOnPullRequests: String!) {
+    repository(owner: $owner, name: $repo) {
+      labels(query: $labelToApply, first: 1) {
+        nodes {
+          name
+          id
+        }
+      }
+      pullRequests(labels: [$labelsOnPullRequests], states: [OPEN], last: 30) {
+        nodes {
+          title
+          id
+        }
+      }
+    }
+  }
+`;
+
+export const addLabelToPullRequest = `
+  mutation AddLabel($labelId: String!, $pullRequestId: String!) {
+    addLabelsToLabelable(input: {labelIds: [$labelId], labelableId: $pullRequestId}) {
+      clientMutationId
+      labelable {
+        ... on PullRequest {
+          id
+          title
+        }
+      }
+    }
+  }
+`;
+
+export const removeLabelFromPullRequest = `
+  mutation RemoveLabel($labelId: String!, $pullRequestId: String!) {
+    removeLabelsFromLabelable(input: {labelIds: [$labelId], labelableId: $pullRequestId}) {
+      clientMutationId
+      labelable {
+        ... on PullRequest {
+          id
+          title
+        }
+      }
+    }
+  }
+`;

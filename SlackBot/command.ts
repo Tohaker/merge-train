@@ -1,4 +1,3 @@
-import { Context } from "@azure/functions";
 import { RespondFn } from "@slack/bolt";
 import { icon_emoji } from "../common/config";
 import {
@@ -7,25 +6,31 @@ import {
   nextSuccess,
   listEmpty,
   listSuccess,
+  pauseSuccess,
+  pauseFailure,
+  resumeSuccess,
+  resumeFailure,
 } from "./constants";
 import { getList } from "./list";
+import { pauseAll, resumeAll } from "./pause";
 
 enum CommandType {
   NEXT = "next",
   LIST = "list",
+  PAUSE = "pause",
+  RESUME = "resume",
   HELP = "help",
 }
 
 type Props = {
   text: string;
-  context: Context;
   respond: RespondFn;
 };
 
 const createMarkdownList = (items: any[]) =>
   items.reduce((prev, current, i) => prev + `${i + 1}. ${current}\n`, "");
 
-export const parseCommand = async ({ text, context, respond }: Props) => {
+export const parseCommand = async ({ text, respond }: Props) => {
   const sendEphemeralMessage = (text: string) =>
     respond({ icon_emoji, response_type: "ephemeral", text });
 
@@ -47,14 +52,14 @@ export const parseCommand = async ({ text, context, respond }: Props) => {
 
   const commandType = text.split(" ")[0].toLowerCase();
 
-  context.log(`Command: ${commandType}`);
+  console.log(`Command: ${commandType}`);
   if (!(<any>Object).values(CommandType).includes(commandType)) {
     await sendEphemeralMessage(invalidCommand);
 
     return;
   }
 
-  const list = await getList(context);
+  const list = await getList();
 
   switch (commandType) {
     case CommandType.NEXT:
@@ -68,6 +73,12 @@ export const parseCommand = async ({ text, context, respond }: Props) => {
       if (list.length) await send(listSuccess(createMarkdownList(list)));
       else await send(listEmpty);
       break;
+    case CommandType.PAUSE:
+      if (await pauseAll()) await sendMessage(pauseSuccess);
+      else await sendMessage(pauseFailure);
+    case CommandType.RESUME:
+      if (await resumeAll()) await sendMessage(resumeSuccess);
+      else await sendMessage(resumeFailure);
     case CommandType.HELP:
       await sendEphemeralMessage(helpText);
       break;
