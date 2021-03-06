@@ -15,6 +15,8 @@ The proposed contract for interacting with the bot on Slack is as follows:
 
 - `/merge next` - Display the next URL in the list. This will not remove it from the list.
 - `/merge list (public)` - Display all URLs in the list, in the order they were added. Add `public` to share this list with the channel.
+- `/merge pause` - Pause the merge train. While paused, no automatic merges will be triggered.
+- `/merge resume` - Resume the merge train.
 - `/merge help` - Display this contract to the user as an ephemeral message.
 
 ## Using the Github App
@@ -23,7 +25,7 @@ The Github App function will be invoked when the chosen webhooks are triggered.
 
 | Action           | Output                                                                                                                                                                                                                                                                                                                                                          |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Labeled          | If the label mentions "Ready for merge", a receipt will be posted to the "merge" Slack channel.                                                                                                                                                                                                                                                                 |
+| Labeled          | If the label mentions "Ready for merge", a receipt will be posted to the "merge" Slack channel. If the merge train has been paused previously, this will apply the same `merge train paused` label to the newly labeled PR.                                                                                                                                     |
 | Unlabeled        | If the label mentions "Ready for merge", a receipt will be posted to the "merge" Slack channel.                                                                                                                                                                                                                                                                 |
 | Review Requested | A message will be posted to the "reviews" Slack channel, tagging the users requested. To avoid duplicate calls, this app is setup to only look for a `requested_team` property, as this indicates users have been selected from an organisation team by GitHub. If your organisation does not use this, you will need to modify this code to ignore this field. |
 | Status changed   | If you have a CI pipeline linked to Github, Status changes will trigger the webhook. If a status becomes `success` and applies to the default branch (see Configuration below), it will trigger the next PR in the list to be merged.                                                                                                                           |
