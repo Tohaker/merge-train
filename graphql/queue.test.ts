@@ -13,7 +13,10 @@ describe("Queue", () => {
       Queue: jest.requireActual("../graphql").Queue,
     }));
     jest.mock("../common/config", () => ({
-      Label: { MERGE_TRAIN_PAUSED: "merge train paused" },
+      Label: {
+        MERGE_TRAIN_PAUSED: "merge train paused",
+        READY_FOR_MERGE: "ready for merge",
+      },
     }));
 
     jest.spyOn(console, "log").mockImplementation(() => {});
@@ -37,6 +40,7 @@ describe("Queue", () => {
       expect(mockClient).toBeCalledWith(mockQuery, {
         owner: "owner",
         repo: "repo",
+        label: "ready for merge",
       });
       expect(data).toEqual({ data: true });
     });

@@ -1,7 +1,7 @@
 export const getPullRequestsReadyForMerge = `
-  query getPullRequestsReadyForMerge($owner: String!, $repo: String!) {
+  query getPullRequestsReadyForMerge($owner: String!, $repo: String!, $label: String!) {
     repository(owner: $owner, name: $repo) {
-      pullRequests(states: OPEN, labels: ["Ready for merge"], last: 30) {
+      pullRequests(states: OPEN, labels: [$label], last: 30) {
         nodes {
           title
           url
@@ -12,6 +12,7 @@ export const getPullRequestsReadyForMerge = `
           labels(last: 5) {
             nodes{
               name
+              id
             }
           }
           commits(last: 1) {

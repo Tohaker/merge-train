@@ -1,13 +1,9 @@
-import { createClient, getPullRequestsReadyForMerge, Queue } from "../graphql";
+import { getQueue } from "../graphql/queue";
 import sortByDate from "../graphql/sortByDate";
 
 export const getList = async (): Promise<string[]> => {
   try {
-    const client = await createClient();
-    const data = await client<Queue>(getPullRequestsReadyForMerge, {
-      owner: process.env.GITHUB_OWNER,
-      repo: process.env.GITHUB_REPOSITORY,
-    });
+    const data = await getQueue();
 
     const labeledEvents = sortByDate(data.repository.pullRequests.nodes);
 

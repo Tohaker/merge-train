@@ -1,17 +1,11 @@
-import { createClient, getPullRequestsReadyForMerge } from "../graphql";
+import { getQueue } from "../graphql/queue";
 import { getList } from "./list";
 
-jest.mock("../graphql");
+jest.mock("../graphql/queue");
 
-const mockCreateClient = createClient as jest.MockedFunction<
-  typeof createClient
->;
+const mockGetQueue = getQueue as jest.MockedFunction<typeof getQueue>;
 
 describe("List", () => {
-  const mockRequest = jest.fn();
-  //@ts-ignore
-  mockCreateClient.mockResolvedValue(mockRequest);
-
   jest.spyOn(console, "error").mockImplementation(() => {});
 
   const mockData = {
@@ -27,38 +21,25 @@ describe("List", () => {
 
   describe("given the data request is successful", () => {
     beforeEach(() => {
-      mockRequest.mockResolvedValue(mockData);
+      //@ts-ignore
+      mockGetQueue.mockResolvedValue(mockData);
     });
 
     it("should return a list of PRs in ascending date order", async () => {
-      process.env.GITHUB_OWNER = "owner";
-      process.env.GITHUB_REPOSITORY = "repo";
-
       const list = await getList();
 
-      expect(mockRequest).toBeCalledWith(getPullRequestsReadyForMerge, {
-        owner: "owner",
-        repo: "repo",
-      });
       expect(list).toEqual(["<url2|title2>", "<url1|title1>"]);
     });
   });
 
   describe("given the data request is unsuccessful", () => {
     beforeEach(() => {
-      mockRequest.mockRejectedValue(false);
+      mockGetQueue.mockRejectedValue(false);
     });
 
     it("should return an empty list", async () => {
-      process.env.GITHUB_OWNER = "owner";
-      process.env.GITHUB_REPOSITORY = "repo";
-
       const list = await getList();
 
-      expect(mockRequest).toBeCalledWith(getPullRequestsReadyForMerge, {
-        owner: "owner",
-        repo: "repo",
-      });
       expect(list).toEqual([]);
     });
   });

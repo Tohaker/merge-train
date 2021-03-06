@@ -1,20 +1,29 @@
 import { WebClient } from "@slack/web-api";
 import { PullRequest, StatusEvent } from "@octokit/webhooks-definitions/schema";
-import { getItems, getMergeableItems } from "../graphql/queue";
+import { getItems, getMergeableItems, getQueue } from "../graphql/queue";
+import { addLabelToPullRequest, createClient } from "../graphql";
 import { handleItemAdded, handleStateReported } from "./autoMerge";
 import { Context } from "@azure/functions";
 
 jest.mock("../graphql/queue");
+jest.mock("../graphql");
 jest.mock("../common/config", () => ({
   Branch: {
     DEFAULT: "master",
   },
   icon_emoji: "emoji",
+  Label: {
+    MERGE_TRAIN_PAUSED: "merge train paused",
+  },
 }));
 
+const mockGetQueue = getQueue as jest.MockedFunction<typeof getQueue>;
 const mockGetItems = getItems as jest.MockedFunction<typeof getItems>;
 const mockGetMergeableItems = getMergeableItems as jest.MockedFunction<
   typeof getMergeableItems
+>;
+const mockCreateClient = createClient as jest.MockedFunction<
+  typeof createClient
 >;
 
 const mockWebClient: WebClient = {
@@ -30,10 +39,13 @@ const mockContext: Context = {
 };
 
 describe("handleItemAdded", () => {
+  const mockClient = jest.fn();
+
   //@ts-ignore
   const mockPR: PullRequest = {
     html_url: "mockUrl",
     title: "PR",
+    node_id: "nodeid123",
     created_at: "1000",
     updated_at: "2000",
     requested_reviewers: [],
@@ -42,14 +54,88 @@ describe("handleItemAdded", () => {
 
   describe("given the queue has 2 items", () => {
     beforeEach(() => {
+      mockGetQueue.mockResolvedValue({
+        //@ts-ignore
+        repository: { pullRequests: { nodes: null } },
+      });
       //@ts-ignore
       mockGetItems.mockReturnValue([mockPR, mockPR]);
+      //@ts-ignore
+      mockCreateClient.mockResolvedValue(mockClient);
     });
 
     it("should not post any message", async () => {
       await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
       expect(mockWebClient.chat.postMessage).not.toBeCalled();
       expect(mockContext.log).toBeCalled();
+    });
+
+    describe("given any item in the queue has a paused label", () => {
+      beforeEach(() => {
+        const mockQueue = {
+          repository: {
+            pullRequests: {
+              nodes: [
+                {
+                  labels: {
+                    nodes: [
+                      { id: "123", name: "ready for merge" },
+                      { id: "456", name: "merge train paused" },
+                    ],
+                  },
+                },
+                {
+                  labels: {
+                    nodes: [{ id: "123", name: "ready for merge" }],
+                  },
+                },
+              ],
+            },
+          },
+        };
+        //@ts-ignore
+        mockGetQueue.mockResolvedValue(mockQueue);
+      });
+
+      it("should add a label to the pull request", async () => {
+        await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
+
+        expect(mockClient).toBeCalledWith(addLabelToPullRequest, {
+          labelId: "456",
+          pullRequestId: "nodeid123",
+        });
+      });
+    });
+
+    describe("given no items in the queue have a paused label", () => {
+      beforeEach(() => {
+        const mockQueue = {
+          repository: {
+            pullRequests: {
+              nodes: [
+                {
+                  labels: {
+                    nodes: [{ id: "123", name: "ready for merge" }, ,],
+                  },
+                },
+                {
+                  labels: {
+                    nodes: [{ id: "123", name: "ready for merge" }],
+                  },
+                },
+              ],
+            },
+          },
+        };
+        //@ts-ignore
+        mockGetQueue.mockResolvedValue(mockQueue);
+      });
+
+      it("should not add a label to the pull request", async () => {
+        await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
+
+        expect(mockClient).not.toBeCalled();
+      });
     });
   });
 

@@ -1,4 +1,3 @@
-import { Context } from "@azure/functions";
 import { PullRequest } from "@octokit/graphql-schema";
 import {
   createClient,
@@ -13,6 +12,7 @@ export const getQueue = async () => {
   const data = await client<Queue>(getPullRequestsReadyForMerge, {
     owner: process.env.GITHUB_OWNER,
     repo: process.env.GITHUB_REPOSITORY,
+    label: Label.READY_FOR_MERGE,
   });
 
   return data;

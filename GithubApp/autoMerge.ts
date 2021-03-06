@@ -1,8 +1,10 @@
 import { Context } from "@azure/functions";
 import { WebClient } from "@slack/web-api";
 import { PullRequest, StatusEvent } from "@octokit/webhooks-definitions/schema";
+import { Label as PullRequestLabel } from "@octokit/graphql-schema";
 import { getQueue, getItems, getMergeableItems } from "../graphql/queue";
-import { Branch, icon_emoji } from "../common/config";
+import { Branch, icon_emoji, Label } from "../common/config";
+import { addLabelToPullRequest, createClient } from "../graphql";
 
 export const handleItemAdded = async (
   client: WebClient,
@@ -14,6 +16,22 @@ export const handleItemAdded = async (
 
   if (getItems(queue).length > 1) {
     context.log("Queue was not empty, no new merges to perform");
+
+    const labels: PullRequestLabel[] = queue.repository.pullRequests.nodes?.reduce(
+      (acc, pr) => acc.concat(pr.labels?.nodes),
+      []
+    );
+    if (labels?.some((label) => label.name === Label.MERGE_TRAIN_PAUSED)) {
+      context.log("Pausing this PR");
+      const client = await createClient();
+
+      await client(addLabelToPullRequest, {
+        labelId: labels.find(({ name }) => name === Label.MERGE_TRAIN_PAUSED)
+          .id,
+        pullRequestId: pullRequest.node_id,
+      });
+    }
+
     return;
   }
 
