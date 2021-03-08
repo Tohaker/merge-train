@@ -1,7 +1,11 @@
 import { WebClient } from "@slack/web-api";
 import { PullRequest, StatusEvent } from "@octokit/webhooks-definitions/schema";
 import { getItems, getMergeableItems, getQueue } from "../graphql/queue";
-import { addLabelToPullRequest, createClient } from "../graphql";
+import {
+  addLabelToPullRequest,
+  getCommitStatus,
+  createClient,
+} from "../graphql";
 import { handleItemAdded, handleStateReported } from "./autoMerge";
 import { Context } from "@azure/functions";
 
@@ -52,6 +56,11 @@ describe("handleItemAdded", () => {
     mergeable: true,
   };
 
+  beforeEach(() => {
+    //@ts-ignore
+    mockCreateClient.mockResolvedValue(mockClient);
+  });
+
   describe("given the queue has 2 items", () => {
     beforeEach(() => {
       mockGetQueue.mockResolvedValue({
@@ -60,8 +69,6 @@ describe("handleItemAdded", () => {
       });
       //@ts-ignore
       mockGetItems.mockReturnValue([mockPR, mockPR]);
-      //@ts-ignore
-      mockCreateClient.mockResolvedValue(mockClient);
     });
 
     it("should not post any message", async () => {
@@ -163,15 +170,77 @@ describe("handleItemAdded", () => {
 
     describe("given the pr is mergeable", () => {
       beforeEach(() => {
+        const mockQueue = {
+          repository: {
+            defaultBranchRef: {
+              target: {
+                commitUrl: "https://commit.url",
+              },
+            },
+            pullRequests: {
+              nodes: [
+                {
+                  labels: {
+                    nodes: [
+                      { id: "123", name: "ready for merge" },
+                      { id: "456", name: "merge train paused" },
+                    ],
+                  },
+                },
+                {
+                  labels: {
+                    nodes: [{ id: "123", name: "ready for merge" }],
+                  },
+                },
+              ],
+            },
+          },
+        };
+        //@ts-ignore
+        mockGetQueue.mockResolvedValue(mockQueue);
         mockPR.mergeable = true;
       });
 
-      it("should post a message", async () => {
-        await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
-        expect(mockWebClient.chat.postMessage).toBeCalledWith({
-          icon_emoji: "emoji",
-          text: "<mockUrl|PR> would have been merged now, is it a good time?",
-          channel: "channel",
+      describe("given the default branch head commit has a successful status", () => {
+        beforeEach(() => {
+          mockClient.mockResolvedValue({
+            resource: { status: { state: "SUCCESS" } },
+          });
+        });
+
+        it("should post a message", async () => {
+          await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
+
+          expect(mockClient).toBeCalledWith(getCommitStatus, {
+            url: "https://commit.url",
+          });
+          expect(mockWebClient.chat.postMessage).toBeCalledWith({
+            icon_emoji: "emoji",
+            text: "<mockUrl|PR> would have been merged now, is it a good time?",
+            channel: "channel",
+          });
+        });
+      });
+
+      describe("given the default branch head commit has a pending status", () => {
+        beforeEach(() => {
+          mockClient.mockResolvedValue({
+            resource: { status: { state: "PENDING" } },
+          });
+        });
+
+        it("should post a message", async () => {
+          await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
+
+          expect(mockClient).toBeCalledWith(getCommitStatus, {
+            url: "https://commit.url",
+          });
+          expect(mockWebClient.chat.postMessage).toBeCalledWith({
+            icon_emoji: "emoji",
+            text:
+              "This PR cannot be merged yet, remove the label until this is resolved.",
+            channel: "channel",
+          });
         });
       });
     });
@@ -247,16 +316,85 @@ describe("handleStateReported", () => {
         mockGetMergeableItems.mockReturnValue([]);
       });
 
-      it("should post a message", async () => {
-        await handleStateReported(mockWebClient, mockBody, "1234");
-
-        expect(mockWebClient.chat.postMessage).toBeCalledWith({
-          icon_emoji: "emoji",
-          text:
-            "The merge train has pulled into the station; no PRs left to merge. All aboard!",
-          channel: "1234",
+      describe("given the queue is not paused", () => {
+        beforeEach(() => {
+          const mockQueue = {
+            repository: {
+              defaultBranchRef: {
+                target: {
+                  commitUrl: "https://commit.url",
+                },
+              },
+              pullRequests: {
+                nodes: [
+                  {
+                    labels: {
+                      nodes: [{ id: "123", name: "ready for merge" }],
+                    },
+                  },
+                  {
+                    labels: {
+                      nodes: [{ id: "123", name: "ready for merge" }],
+                    },
+                  },
+                ],
+              },
+            },
+          };
+          //@ts-ignore
+          mockGetQueue.mockResolvedValue(mockQueue);
         });
-        expect(mockWebClient.chat.postMessage).toBeCalledTimes(1);
+
+        it("should post a message", async () => {
+          await handleStateReported(mockWebClient, mockBody, "1234");
+
+          expect(mockWebClient.chat.postMessage).toBeCalledWith({
+            icon_emoji: "emoji",
+            text:
+              "The merge train has pulled into the station; no PRs left to merge. All aboard!",
+            channel: "1234",
+          });
+          expect(mockWebClient.chat.postMessage).toBeCalledTimes(1);
+        });
+      });
+
+      describe("given the queue is paused", () => {
+        beforeEach(() => {
+          const mockQueue = {
+            repository: {
+              defaultBranchRef: {
+                target: {
+                  commitUrl: "https://commit.url",
+                },
+              },
+              pullRequests: {
+                nodes: [
+                  {
+                    labels: {
+                      nodes: [
+                        { id: "123", name: "ready for merge" },
+                        { id: "456", name: "merge train paused" },
+                      ],
+                    },
+                  },
+                  {
+                    labels: {
+                      nodes: [{ id: "123", name: "ready for merge" }],
+                    },
+                  },
+                ],
+              },
+            },
+          };
+          //@ts-ignore
+          mockGetQueue.mockResolvedValue(mockQueue);
+        });
+
+        it("should not post a message", async () => {
+          await handleStateReported(mockWebClient, mockBody, "1234");
+
+          expect(mockWebClient.chat.postMessage).not.toBeCalled();
+        });
       });
     });
   });

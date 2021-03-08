@@ -1,6 +1,11 @@
 export const getPullRequestsReadyForMerge = `
   query getPullRequestsReadyForMerge($owner: String!, $repo: String!, $label: String!) {
     repository(owner: $owner, name: $repo) {
+      defaultBranchRef {
+        target {
+          commitUrl
+        }
+      }
       pullRequests(states: OPEN, labels: [$label], last: 30) {
         nodes {
           title
@@ -32,6 +37,18 @@ export const getPullRequestsReadyForMerge = `
               }
             }
           }
+        }
+      }
+    }
+  }
+`;
+
+export const getCommitStatus = `
+  query GetCommitStatus($url: String!) {
+    resource(url: $url) {
+      ... on Commit {
+        status {
+          state
         }
       }
     }
