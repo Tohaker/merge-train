@@ -1,11 +1,7 @@
 import { Context } from "@azure/functions";
 import { WebClient } from "@slack/web-api";
 import { PullRequest, StatusEvent } from "@octokit/webhooks-definitions/schema";
-import {
-  Label as PullRequestLabel,
-  Commit,
-  UniformResourceLocatable,
-} from "@octokit/graphql-schema";
+import { Label as PullRequestLabel, Commit } from "@octokit/graphql-schema";
 import { getQueue, getItems, getMergeableItems } from "../graphql/queue";
 import { Branch, icon_emoji, Label } from "../common/config";
 import {
@@ -55,7 +51,7 @@ export const handleItemAdded = async (
     headCommitUrl &&
     (
       await graphqlClient<{ resource: Commit }>(getCommitStatus, {
-        url: headCommitUrl,
+        commitRef: headCommitUrl,
       })
     ).resource;
   const state = resource?.status?.state;

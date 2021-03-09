@@ -212,7 +212,7 @@ describe("handleItemAdded", () => {
           await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
 
           expect(mockClient).toBeCalledWith(getCommitStatus, {
-            url: "https://commit.url",
+            commitRef: "https://commit.url",
           });
           expect(mockWebClient.chat.postMessage).toBeCalledWith({
             icon_emoji: "emoji",
@@ -233,7 +233,7 @@ describe("handleItemAdded", () => {
           await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
 
           expect(mockClient).toBeCalledWith(getCommitStatus, {
-            url: "https://commit.url",
+            commitRef: "https://commit.url",
           });
           expect(mockWebClient.chat.postMessage).toBeCalledWith({
             icon_emoji: "emoji",

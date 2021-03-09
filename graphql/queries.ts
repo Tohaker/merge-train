@@ -44,8 +44,8 @@ export const getPullRequestsReadyForMerge = `
 `;
 
 export const getCommitStatus = `
-  query GetCommitStatus($url: String!) {
-    resource(url: $url) {
+  query GetCommitStatus($commitRef: URI!) {
+    resource(url: $commitRef) {
       ... on Commit {
         status {
           state
