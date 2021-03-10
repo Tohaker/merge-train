@@ -18,7 +18,7 @@
   "dependencies": {
     "@azure/functions": "^1.2.3",
     "@octokit/auth": "^3.0.3",
-    "@octokit/graphql": "^4.6.0",
+    "@octokit/graphql": "^4.6.1",
     "@octokit/graphql-schema": "^10.25.1",
     "@octokit/webhooks": "^8.4.1",
     "@slack/bolt": "^3.2.0",
