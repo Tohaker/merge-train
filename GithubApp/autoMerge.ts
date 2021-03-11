@@ -55,21 +55,21 @@ export const handleItemAdded = async (
       })
     ).resource;
   const state = resource?.status?.state;
-
-  if (pullRequest.mergeable && state === "SUCCESS") {
-    // TODO: Replace with actual merge request
-    await client.chat.postMessage({
-      icon_emoji,
-      text: `<${pullRequest.html_url}|${pullRequest.title}> would have been merged now, is it a good time?`,
-      channel,
-    });
-  } else {
-    await client.chat.postMessage({
-      icon_emoji,
-      text:
-        "This PR cannot be merged yet, remove the label until this is resolved.",
-      channel,
-    });
+  if (state === "SUCCESS") {
+    if (pullRequest.mergeable) {
+      // TODO: Replace with actual merge request
+      await client.chat.postMessage({
+        icon_emoji,
+        text: `<${pullRequest.html_url}|${pullRequest.title}> would have been merged now, is it a good time?`,
+        channel,
+      });
+    } else {
+      await client.chat.postMessage({
+        icon_emoji,
+        text: `<${pullRequest.html_url}|${pullRequest.title}> cannot be merged yet, remove the label until this is resolved.`,
+        channel,
+      });
+    }
   }
 };
 

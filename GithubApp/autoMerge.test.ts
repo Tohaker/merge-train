@@ -152,60 +152,44 @@ describe("handleItemAdded", () => {
       mockGetItems.mockReturnValue([mockPR]);
     });
 
-    describe("given the pr is not mergeable", () => {
+    describe("given the default branch head commit has a successful status", () => {
       beforeEach(() => {
-        mockPR.mergeable = false;
-      });
-
-      it("should post a message", async () => {
-        await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
-        expect(mockWebClient.chat.postMessage).toBeCalledWith({
-          icon_emoji: "emoji",
-          text:
-            "This PR cannot be merged yet, remove the label until this is resolved.",
-          channel: "channel",
+        mockClient.mockResolvedValue({
+          resource: { status: { state: "SUCCESS" } },
         });
       });
-    });
 
-    describe("given the pr is mergeable", () => {
-      beforeEach(() => {
-        const mockQueue = {
-          repository: {
-            defaultBranchRef: {
-              target: {
-                commitUrl: "https://commit.url",
+      describe("given the pr is mergeable", () => {
+        beforeEach(() => {
+          const mockQueue = {
+            repository: {
+              defaultBranchRef: {
+                target: {
+                  commitUrl: "https://commit.url",
+                },
+              },
+              pullRequests: {
+                nodes: [
+                  {
+                    labels: {
+                      nodes: [
+                        { id: "123", name: "ready for merge" },
+                        { id: "456", name: "merge train paused" },
+                      ],
+                    },
+                  },
+                  {
+                    labels: {
+                      nodes: [{ id: "123", name: "ready for merge" }],
+                    },
+                  },
+                ],
               },
             },
-            pullRequests: {
-              nodes: [
-                {
-                  labels: {
-                    nodes: [
-                      { id: "123", name: "ready for merge" },
-                      { id: "456", name: "merge train paused" },
-                    ],
-                  },
-                },
-                {
-                  labels: {
-                    nodes: [{ id: "123", name: "ready for merge" }],
-                  },
-                },
-              ],
-            },
-          },
-        };
-        //@ts-ignore
-        mockGetQueue.mockResolvedValue(mockQueue);
-        mockPR.mergeable = true;
-      });
-
-      describe("given the default branch head commit has a successful status", () => {
-        beforeEach(() => {
-          mockClient.mockResolvedValue({
-            resource: { status: { state: "SUCCESS" } },
-          });
+          };
+          //@ts-ignore
+          mockGetQueue.mockResolvedValue(mockQueue);
+          mockPR.mergeable = true;
         });
 
         it("should post a message", async () => {
@@ -222,26 +206,37 @@ describe("handleItemAdded", () => {
         });
       });
 
-      describe("given the default branch head commit has a pending status", () => {
+      describe("given the pr is not mergeable", () => {
         beforeEach(() => {
-          mockClient.mockResolvedValue({
-            resource: { status: { state: "PENDING" } },
-          });
+          mockPR.mergeable = false;
         });
 
         it("should post a message", async () => {
           await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
-
-          expect(mockClient).toBeCalledWith(getCommitStatus, {
-            commitRef: "https://commit.url",
-          });
           expect(mockWebClient.chat.postMessage).toBeCalledWith({
             icon_emoji: "emoji",
             text:
-              "This PR cannot be merged yet, remove the label until this is resolved.",
+              "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
             channel: "channel",
           });
         });
+      });
+    });
+
+    describe("given the default branch head commit has a pending status", () => {
+      beforeEach(() => {
+        mockClient.mockResolvedValue({
+          resource: { status: { state: "PENDING" } },
+        });
+      });
+
+      it("should not post a message", async () => {
+        await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
+
+        expect(mockClient).toBeCalledWith(getCommitStatus, {
+          commitRef: "https://commit.url",
+        });
+        expect(mockWebClient.chat.postMessage).not.toBeCalled();
       });
     });
   });
