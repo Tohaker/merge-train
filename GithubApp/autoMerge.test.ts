@@ -1,6 +1,11 @@
 import { WebClient } from "@slack/web-api";
 import { PullRequest, StatusEvent } from "@octokit/webhooks-definitions/schema";
-import { getItems, getMergeableItems, getQueue } from "../graphql/queue";
+import {
+  getItems,
+  getMergeableItemsState,
+  isMergeable,
+  getQueue,
+} from "../graphql/queue";
 import {
   addLabelToPullRequest,
   getCommitStatus,
@@ -23,9 +28,10 @@ jest.mock("../common/config", () => ({
 
 const mockGetQueue = getQueue as jest.MockedFunction<typeof getQueue>;
 const mockGetItems = getItems as jest.MockedFunction<typeof getItems>;
-const mockGetMergeableItems = getMergeableItems as jest.MockedFunction<
-  typeof getMergeableItems
+const mockGetMergeableItemsState = getMergeableItemsState as jest.MockedFunction<
+  typeof getMergeableItemsState
 >;
+const mockIsMergeable = isMergeable as jest.MockedFunction<typeof isMergeable>;
 const mockCreateClient = createClient as jest.MockedFunction<
   typeof createClient
 >;
@@ -272,7 +278,7 @@ describe("handleStateReported", () => {
     it("should do nothing", async () => {
       await handleStateReported(mockWebClient, mockBody, "1234");
 
-      expect(mockGetMergeableItems).not.toBeCalled();
+      expect(mockGetMergeableItemsState).not.toBeCalled();
       expect(mockWebClient.chat.postMessage).not.toBeCalled();
     });
   });
@@ -280,7 +286,7 @@ describe("handleStateReported", () => {
   describe("given the matching branch is the default branch", () => {
     describe("given there are mergeable items", () => {
       beforeEach(() => {
-        mockGetMergeableItems.mockReturnValue([
+        mockGetMergeableItemsState.mockReturnValue([
           //@ts-ignore
           {
             url: "https://some.url",
@@ -292,6 +298,7 @@ describe("handleStateReported", () => {
             title: "title2",
           },
         ]);
+        mockIsMergeable.mockReturnValue(true);
       });
 
       it("should post a message", async () => {
@@ -308,7 +315,23 @@ describe("handleStateReported", () => {
 
     describe("given there are no mergeable items", () => {
       beforeEach(() => {
-        mockGetMergeableItems.mockReturnValue([]);
+        mockGetMergeableItemsState.mockReturnValue([
+          {
+            mergeable: "CONFLICTING",
+            headCommitState: "SUCCESS",
+            appliedLabels: ["Ready for merge"],
+            url: "https://some.url",
+            title: "title",
+          },
+          {
+            mergeable: "UNKNOWN",
+            headCommitState: "FAILURE",
+            appliedLabels: ["Ready for merge", "merge train paused"],
+            url: "https://some2.url",
+            title: "title2",
+          },
+        ]);
+        mockIsMergeable.mockReturnValue(false);
       });
 
       describe("given the queue is not paused", () => {
@@ -345,8 +368,57 @@ describe("handleStateReported", () => {
 
           expect(mockWebClient.chat.postMessage).toBeCalledWith({
             icon_emoji: "emoji",
-            text:
-              "The merge train has pulled into the station; no PRs left to merge. All aboard!",
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text:
+                    "*No Pull Requests are ready to merge*\nReview their statuses below",
+                },
+              },
+              {
+                type: "divider",
+              },
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: "<https://some.url|title>",
+                },
+              },
+              {
+                type: "context",
+                elements: [
+                  {
+                    type: "mrkdown",
+                    text:
+                      "Mergeable: `CONFLICTING`\nHead Commit State: `SUCCESS`\nLabels: `Ready for merge`",
+                  },
+                ],
+              },
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: "<https://some2.url|title2>",
+                },
+              },
+              {
+                type: "context",
+                elements: [
+                  {
+                    type: "mrkdown",
+                    text:
+                      "Mergeable: `UNKNOWN`\nHead Commit State: `FAILURE`\nLabels: `Ready for merge`, `merge train paused`",
+                  },
+                ],
+              },
+              {
+                type: "divider",
+              },
+            ],
+            text: "No PRs left to merge.",
             channel: "1234",
           });
           expect(mockWebClient.chat.postMessage).toBeCalledTimes(1);

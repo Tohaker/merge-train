@@ -2,7 +2,13 @@ import { Context } from "@azure/functions";
 import { WebClient } from "@slack/web-api";
 import { PullRequest, StatusEvent } from "@octokit/webhooks-definitions/schema";
 import { Label as PullRequestLabel, Commit } from "@octokit/graphql-schema";
-import { getQueue, getItems, getMergeableItems } from "../graphql/queue";
+import {
+  getQueue,
+  getItems,
+  getMergeableItemsState,
+  isMergeable,
+  MergeableItemState,
+} from "../graphql/queue";
 import { Branch, icon_emoji, Label } from "../common/config";
 import {
   addLabelToPullRequest,
@@ -73,6 +79,48 @@ export const handleItemAdded = async (
   }
 };
 
+const createBlocks = (states: MergeableItemState[]) => {
+  const blocks = [
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text:
+          "*No Pull Requests are ready to merge*\nReview their statuses below",
+      },
+    },
+    {
+      type: "divider",
+    },
+  ];
+
+  const sections = states.reduce((acc, state) => {
+    const link = `<${state.url}|${state.title}>`;
+    const element = `Mergeable: \`${state.mergeable}\`\nHead Commit State: \`${
+      state.headCommitState
+    }\`\nLabels: ${state.appliedLabels.map((l) => `\`${l}\``).join(", ")}`;
+
+    const section = {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: link,
+      },
+    };
+
+    const context = {
+      type: "context",
+      elements: [{ type: "mrkdown", text: element }],
+    };
+
+    return acc.concat(section, context);
+  }, []);
+
+  blocks.push(...sections, { type: "divider" });
+
+  return blocks;
+};
+
 export const handleStateReported = async (
   client: WebClient,
   body: StatusEvent,
@@ -85,7 +133,11 @@ export const handleStateReported = async (
   if (matchingBranch?.name === Branch.DEFAULT) {
     const queue = await getQueue();
     const labels = getLabels(queue);
-    const mergeableItems = getMergeableItems(queue);
+    const mergeableItemsState = getMergeableItemsState(queue);
+
+    const mergeableItems = mergeableItemsState.filter((item) =>
+      isMergeable(item)
+    );
 
     if (mergeableItems.length) {
       const prToMerge = mergeableItems.shift();
@@ -98,8 +150,8 @@ export const handleStateReported = async (
     } else if (!isPaused(labels)) {
       await client.chat.postMessage({
         icon_emoji,
-        text:
-          "The merge train has pulled into the station; no PRs left to merge. All aboard!",
+        blocks: createBlocks(mergeableItemsState),
+        text: "No PRs left to merge.",
         channel,
       });
     }
