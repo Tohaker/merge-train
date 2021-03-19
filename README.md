@@ -42,10 +42,11 @@ You'll need to create a GitHub App for deployment. You can find instructions on 
 
 The following App permissions will need to be set:
 
-| Permission      | Level        |
-| --------------- | ------------ |
-| Pull requests   | Read & Write |
-| Commit statuses | Read-only    |
+| Permission      | Level        | Reason                                                      |
+| --------------- | ------------ | ----------------------------------------------------------- |
+| Contents        | Read & Write | Provides ability to merge pull requests                     |
+| Pull requests   | Read & Write | Provides ability to read pull requests and apply new labels |
+| Commit statuses | Read-only    | Provides status checks for every commit                     |
 
 This app will need to be installed in the repository you wish to track, and an additional webhook for Status events will need to be set in the repository.
 
@@ -56,12 +57,13 @@ This app will need to be installed in the repository you wish to track, and an a
 
 Some basic configuration options are available for the functions. The [config](common/config.ts) file contains these options to be changed;
 
-| Option      | Purpose                                                                                                                                                                      | Default                                 |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| ChannelName | Slack channels where you wish `merge` and `review` messages to be sent. These do not need to be different.                                                                   | `merge`, `reviews`                      |
-| Branch      | List of branches that are meaningful within the context of these functions. Only `DEFAULT` is defined, and this corresponds to the default branch of your GitHub repository. | `master`                                |
-| Label       | Label names used in Github to represent various PR states                                                                                                                    | `ready for merge`, `merge train paused` |
-| icon_emoji  | The emoji to use in Slack messages                                                                                                                                           | `:steam_locomotive:`                    |
+| Option       | Purpose                                                                                                                                                                      | Default                                                                                                     |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| ChannelName  | Slack channels where you wish `merge` and `review` messages to be sent. These do not need to be different.                                                                   | `merge`, `reviews`                                                                                          |
+| Branch       | List of branches that are meaningful within the context of these functions. Only `DEFAULT` is defined, and this corresponds to the default branch of your GitHub repository. | `master`                                                                                                    |
+| Label        | Label names used in Github to represent various PR states                                                                                                                    | `ready for merge`, `merge train paused`                                                                     |
+| mergeMethods | An ordered list of Regular Expressions and merge methods to match particular branch rules you wish to enforce.                                                               | By default, all PRs will be merged with the `SQUASH` method, apart from branches beginning with `release/`. |
+| icon_emoji   | The emoji to use in Slack messages                                                                                                                                           | `:steam_locomotive:`                                                                                        |
 
 If you want Slack users to be tagged in the reviews, they will need to add their GitHub login ID to their Slack profile under "What I do". If this is not filled, the GitHub ID will be posted instead.
 

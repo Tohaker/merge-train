@@ -83,6 +83,7 @@ export const handleItemAdded = async (
       const id = pullRequest.node_id;
       const branch = pullRequest.head.ref;
 
+      console.log(`Merging: ${pullRequest.title}`);
       await mergePR(graphqlClient, id, branch);
     } else {
       await client.chat.postMessage({
@@ -159,6 +160,7 @@ export const handleStateReported = async (
       const prToMerge = mergeableItems.shift();
       const { id, headRefName } = prToMerge;
 
+      console.log(`Merging: ${prToMerge.title}`);
       await mergePR(graphqlClient, id, headRefName);
     } else if (!isPaused(labels)) {
       await client.chat.postMessage({
