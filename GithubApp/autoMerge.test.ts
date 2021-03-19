@@ -316,6 +316,7 @@ describe("handleStateReported", () => {
     describe("given there are no mergeable items", () => {
       beforeEach(() => {
         mockGetMergeableItemsState.mockReturnValue([
+          //@ts-ignore
           {
             mergeable: "CONFLICTING",
             headCommitState: "SUCCESS",
@@ -323,6 +324,7 @@ describe("handleStateReported", () => {
             url: "https://some.url",
             title: "title",
           },
+          //@ts-ignore
           {
             mergeable: "UNKNOWN",
             headCommitState: "FAILURE",

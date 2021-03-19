@@ -10,6 +10,8 @@ export const getPullRequestsReadyForMerge = `
         nodes {
           title
           url
+          id
+          headRefName
           mergeable
           timelineItems(itemTypes: [LABELED_EVENT], last: 1) {
             updatedAt
@@ -98,6 +100,14 @@ export const removeLabelFromPullRequest = `
           title
         }
       }
+    }
+  }
+`;
+
+export const mergePullRequest = `
+  mutation MergePullRequest($prId: ID!, $mergeMethod: PullRequestMergeMethod!) {
+    mergePullRequest(input: {pullRequestId: $prId, mergeMethod: $mergeMethod}) {
+      clientMutationId
     }
   }
 `;

@@ -155,6 +155,17 @@ describe("Queue", () => {
             appliedLabels: ["Ready for merge"],
             url: "url1",
             title: "title1",
+            timelineItems: { updatedAt: "2021-02-19T11:33:35.057Z" },
+            commits: {
+              nodes: [{ commit: { status: { state: "SUCCESS" } } }],
+            },
+            labels: {
+              nodes: [
+                {
+                  name: "Ready for merge",
+                },
+              ],
+            },
           },
           {
             mergeable: "UNKNOWN",
@@ -162,6 +173,17 @@ describe("Queue", () => {
             appliedLabels: ["Ready for merge"],
             url: "url2",
             title: "title2",
+            timelineItems: { updatedAt: "2021-02-19T12:33:35.057Z" },
+            commits: {
+              nodes: [{ commit: { status: { state: "SUCCESS" } } }],
+            },
+            labels: {
+              nodes: [
+                {
+                  name: "Ready for merge",
+                },
+              ],
+            },
           },
         ],
       ],
@@ -213,6 +235,17 @@ describe("Queue", () => {
             appliedLabels: ["Ready for merge"],
             url: "url2",
             title: "title2",
+            timelineItems: { updatedAt: "2021-02-19T12:33:35.057Z" },
+            commits: {
+              nodes: [{ commit: { status: { state: "SUCCESS" } } }],
+            },
+            labels: {
+              nodes: [
+                {
+                  name: "Ready for merge",
+                },
+              ],
+            },
           },
           {
             mergeable: "MERGEABLE",
@@ -220,6 +253,17 @@ describe("Queue", () => {
             appliedLabels: ["Ready for merge"],
             url: "url1",
             title: "title1",
+            timelineItems: { updatedAt: "2021-02-19T13:33:35.057Z" },
+            commits: {
+              nodes: [{ commit: { status: { state: "SUCCESS" } } }],
+            },
+            labels: {
+              nodes: [
+                {
+                  name: "Ready for merge",
+                },
+              ],
+            },
           },
         ],
       ],
@@ -271,6 +315,17 @@ describe("Queue", () => {
             appliedLabels: ["Ready for merge"],
             url: "url2",
             title: "title2",
+            timelineItems: { updatedAt: "2021-02-19T12:33:35.057Z" },
+            commits: {
+              nodes: [{ commit: { status: { state: "FAILURE" } } }],
+            },
+            labels: {
+              nodes: [
+                {
+                  name: "Ready for merge",
+                },
+              ],
+            },
           },
           {
             mergeable: "MERGEABLE",
@@ -278,6 +333,17 @@ describe("Queue", () => {
             appliedLabels: ["Ready for merge"],
             url: "url1",
             title: "title1",
+            timelineItems: { updatedAt: "2021-02-19T13:33:35.057Z" },
+            commits: {
+              nodes: [{ commit: { status: { state: "SUCCESS" } } }],
+            },
+            labels: {
+              nodes: [
+                {
+                  name: "Ready for merge",
+                },
+              ],
+            },
           },
         ],
       ],
@@ -332,6 +398,20 @@ describe("Queue", () => {
             appliedLabels: ["Ready for merge", "merge train paused"],
             url: "url2",
             title: "title2",
+            timelineItems: { updatedAt: "2021-02-19T12:33:35.057Z" },
+            commits: {
+              nodes: [{ commit: { status: { state: "SUCCESS" } } }],
+            },
+            labels: {
+              nodes: [
+                {
+                  name: "Ready for merge",
+                },
+                {
+                  name: "merge train paused",
+                },
+              ],
+            },
           },
           {
             mergeable: "MERGEABLE",
@@ -339,6 +419,17 @@ describe("Queue", () => {
             appliedLabels: ["Ready for merge"],
             url: "url1",
             title: "title1",
+            timelineItems: { updatedAt: "2021-02-19T13:33:35.057Z" },
+            commits: {
+              nodes: [{ commit: { status: { state: "SUCCESS" } } }],
+            },
+            labels: {
+              nodes: [
+                {
+                  name: "Ready for merge",
+                },
+              ],
+            },
           },
         ],
       ],

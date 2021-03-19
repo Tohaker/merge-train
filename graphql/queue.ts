@@ -11,12 +11,9 @@ import {
 } from ".";
 import { Label } from "../common/config";
 
-export type MergeableItemState = {
+export type MergeableItemState = PullRequest & {
   appliedLabels: string[];
   headCommitState: StatusState;
-  mergeable: MergeableState;
-  title: string;
-  url: string;
 };
 
 export const getQueue = async () => {
@@ -39,14 +36,12 @@ export const hasItems = (queue: Queue) => {
 };
 
 const getMergeableState = (node: PullRequest): MergeableItemState => {
-  const { mergeable, commits, labels, url, title } = node;
+  const { commits, labels } = node;
 
   return {
+    ...node,
     appliedLabels: labels?.nodes?.map(({ name }) => name),
     headCommitState: commits?.nodes[0].commit.status.state,
-    mergeable,
-    title,
-    url,
   };
 };
 
