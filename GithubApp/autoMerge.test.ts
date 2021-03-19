@@ -9,6 +9,7 @@ import {
 import {
   addLabelToPullRequest,
   getCommitStatus,
+  mergePullRequest,
   createClient,
 } from "../graphql";
 import { handleItemAdded, handleStateReported } from "./autoMerge";
@@ -24,6 +25,16 @@ jest.mock("../common/config", () => ({
   Label: {
     MERGE_TRAIN_PAUSED: "merge train paused",
   },
+  mergeMethods: [
+    {
+      branch: new RegExp("^release/"),
+      mergeMethod: "REBASE",
+    },
+    {
+      branch: new RegExp("\\S*"),
+      mergeMethod: "SQUASH",
+    },
+  ],
 }));
 
 const mockGetQueue = getQueue as jest.MockedFunction<typeof getQueue>;
@@ -48,9 +59,14 @@ const mockContext: Context = {
   log: jest.fn(),
 };
 
-describe("handleItemAdded", () => {
-  const mockClient = jest.fn();
+const mockClient = jest.fn();
 
+beforeEach(() => {
+  //@ts-ignore
+  mockCreateClient.mockResolvedValue(mockClient);
+});
+
+describe("handleItemAdded", () => {
   //@ts-ignore
   const mockPR: PullRequest = {
     html_url: "mockUrl",
@@ -60,12 +76,11 @@ describe("handleItemAdded", () => {
     updated_at: "2000",
     requested_reviewers: [],
     mergeable: true,
-  };
-
-  beforeEach(() => {
     //@ts-ignore
-    mockCreateClient.mockResolvedValue(mockClient);
-  });
+    head: {
+      ref: "release/some-branch",
+    },
+  };
 
   describe("given the queue has 2 items", () => {
     beforeEach(() => {
@@ -197,17 +212,47 @@ describe("handleItemAdded", () => {
           mockGetQueue.mockResolvedValue(mockQueue);
           mockPR.mergeable = true;
         });
+        describe('given the head ref starts with "release/"', () => {
+          it("should rebase the pull request", async () => {
+            await handleItemAdded(
+              mockWebClient,
+              mockPR,
+              "channel",
+              mockContext
+            );
 
-        it("should post a message", async () => {
-          await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
-
-          expect(mockClient).toBeCalledWith(getCommitStatus, {
-            commitRef: "https://commit.url",
+            expect(mockClient).toBeCalledWith(getCommitStatus, {
+              commitRef: "https://commit.url",
+            });
+            expect(mockClient).toBeCalledWith(mergePullRequest, {
+              prId: "nodeid123",
+              mergeMethod: "REBASE",
+            });
+            expect(mockWebClient.chat.postMessage).not.toBeCalled();
           });
-          expect(mockWebClient.chat.postMessage).toBeCalledWith({
-            icon_emoji: "emoji",
-            text: "<mockUrl|PR> would have been merged now, is it a good time?",
-            channel: "channel",
+        });
+
+        describe("given the head ref starts with anything else", () => {
+          beforeEach(() => {
+            mockPR.head.ref = "bugfix/some-branch";
+          });
+
+          it("should squash merge the pull request", async () => {
+            await handleItemAdded(
+              mockWebClient,
+              mockPR,
+              "channel",
+              mockContext
+            );
+
+            expect(mockClient).toBeCalledWith(getCommitStatus, {
+              commitRef: "https://commit.url",
+            });
+            expect(mockClient).toBeCalledWith(mergePullRequest, {
+              prId: "nodeid123",
+              mergeMethod: "SQUASH",
+            });
+            expect(mockWebClient.chat.postMessage).not.toBeCalled();
           });
         });
       });
@@ -285,31 +330,68 @@ describe("handleStateReported", () => {
 
   describe("given the matching branch is the default branch", () => {
     describe("given there are mergeable items", () => {
-      beforeEach(() => {
-        mockGetMergeableItemsState.mockReturnValue([
-          //@ts-ignore
-          {
-            url: "https://some.url",
-            title: "title",
-          },
-          //@ts-ignore
-          {
-            url: "https://some2.url",
-            title: "title2",
-          },
-        ]);
-        mockIsMergeable.mockReturnValue(true);
+      describe('given the headRefName starts with "release/"', () => {
+        beforeEach(() => {
+          mockGetMergeableItemsState.mockReturnValue([
+            //@ts-ignore
+            {
+              url: "https://some.url",
+              title: "title",
+              id: "nodeId",
+              headRefName: "release/some-branch",
+            },
+            //@ts-ignore
+            {
+              url: "https://some2.url",
+              title: "title2",
+              id: "nodeId2",
+              headRefName: "fix/some-branch",
+            },
+          ]);
+          mockIsMergeable.mockReturnValue(true);
+        });
+
+        it("should merge the pull request", async () => {
+          await handleStateReported(mockWebClient, mockBody, "1234");
+
+          expect(mockClient).toBeCalledWith(mergePullRequest, {
+            prId: "nodeId",
+            mergeMethod: "REBASE",
+          });
+          expect(mockWebClient.chat.postMessage).not.toBeCalled();
+        });
       });
 
-      it("should post a message", async () => {
-        await handleStateReported(mockWebClient, mockBody, "1234");
-
-        expect(mockWebClient.chat.postMessage).toBeCalledWith({
-          icon_emoji: "emoji",
-          text: `<https://some.url|title> would have been merged now. Is it a good time?`,
-          channel: "1234",
+      describe("given the headRefName starts with anything else", () => {
+        beforeEach(() => {
+          mockGetMergeableItemsState.mockReturnValue([
+            //@ts-ignore
+            {
+              url: "https://some2.url",
+              title: "title2",
+              id: "nodeId2",
+              headRefName: "fix/some-branch",
+            },
+            //@ts-ignore
+            {
+              url: "https://some.url",
+              title: "title",
+              id: "nodeId",
+              headRefName: "release/some-branch",
+            },
+          ]);
+          mockIsMergeable.mockReturnValue(true);
         });
-        expect(mockWebClient.chat.postMessage).toBeCalledTimes(1);
+
+        it("should merge the pull request", async () => {
+          await handleStateReported(mockWebClient, mockBody, "1234");
+
+          expect(mockClient).toBeCalledWith(mergePullRequest, {
+            prId: "nodeId2",
+            mergeMethod: "SQUASH",
+          });
+          expect(mockWebClient.chat.postMessage).not.toBeCalled();
+        });
       });
     });
 

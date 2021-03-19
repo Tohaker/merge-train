@@ -9,13 +9,15 @@ import {
   isMergeable,
   MergeableItemState,
 } from "../graphql/queue";
-import { Branch, icon_emoji, Label } from "../common/config";
+import { Branch, Label, icon_emoji, mergeMethods } from "../common/config";
 import {
   addLabelToPullRequest,
   getCommitStatus,
+  mergePullRequest,
   createClient,
   Queue,
 } from "../graphql";
+import { graphql } from "@octokit/graphql/dist-types/types";
 
 const getLabels = (queue: Queue): PullRequestLabel[] =>
   queue.repository.pullRequests.nodes?.reduce(
@@ -25,6 +27,21 @@ const getLabels = (queue: Queue): PullRequestLabel[] =>
 
 const isPaused = (labels: PullRequestLabel[]) =>
   labels?.some((label) => label.name === Label.MERGE_TRAIN_PAUSED);
+
+const mergePR = async (
+  graphqlClient: graphql,
+  prId: string,
+  branchName: string
+) => {
+  const { mergeMethod } = mergeMethods.find(({ branch }) =>
+    branch.test(branchName)
+  );
+
+  await graphqlClient(mergePullRequest, {
+    prId,
+    mergeMethod,
+  });
+};
 
 export const handleItemAdded = async (
   client: WebClient,
@@ -63,12 +80,10 @@ export const handleItemAdded = async (
   const state = resource?.status?.state;
   if (state === "SUCCESS") {
     if (pullRequest.mergeable) {
-      // TODO: Replace with actual merge request
-      await client.chat.postMessage({
-        icon_emoji,
-        text: `<${pullRequest.html_url}|${pullRequest.title}> would have been merged now, is it a good time?`,
-        channel,
-      });
+      const id = pullRequest.node_id;
+      const branch = pullRequest.head.ref;
+
+      await mergePR(graphqlClient, id, branch);
     } else {
       await client.chat.postMessage({
         icon_emoji,
@@ -140,13 +155,11 @@ export const handleStateReported = async (
     );
 
     if (mergeableItems.length) {
+      const graphqlClient = await createClient();
       const prToMerge = mergeableItems.shift();
-      // TODO: Replace with actual merge request
-      await client.chat.postMessage({
-        icon_emoji,
-        text: `<${prToMerge.url}|${prToMerge.title}> would have been merged now. Is it a good time?`,
-        channel,
-      });
+      const { id, headRefName } = prToMerge;
+
+      await mergePR(graphqlClient, id, headRefName);
     } else if (!isPaused(labels)) {
       await client.chat.postMessage({
         icon_emoji,
