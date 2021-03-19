@@ -1,4 +1,8 @@
-import { PullRequest } from "@octokit/graphql-schema";
+import {
+  MergeableState,
+  PullRequest,
+  StatusState,
+} from "@octokit/graphql-schema";
 import {
   createClient,
   sortByDate,
@@ -6,6 +10,14 @@ import {
   Queue,
 } from ".";
 import { Label } from "../common/config";
+
+export type MergeableItemState = {
+  appliedLabels: string[];
+  headCommitState: StatusState;
+  mergeable: MergeableState;
+  title: string;
+  url: string;
+};
 
 export const getQueue = async () => {
   const client = await createClient();
@@ -26,25 +38,37 @@ export const hasItems = (queue: Queue) => {
   return getItems(queue).length > 0;
 };
 
-const isMergeable = (node: PullRequest) => {
-  const { mergeable, commits, labels } = node;
+const getMergeableState = (node: PullRequest): MergeableItemState => {
+  const { mergeable, commits, labels, url, title } = node;
+
+  return {
+    appliedLabels: labels?.nodes?.map(({ name }) => name),
+    headCommitState: commits?.nodes[0].commit.status.state,
+    mergeable,
+    title,
+    url,
+  };
+};
+
+export const isMergeable = (state: MergeableItemState) => {
+  const { mergeable, headCommitState, appliedLabels } = state;
 
   console.log("Mergeable - ", mergeable);
-  console.log("Last commit state - ", commits?.nodes[0].commit.status.state);
-  console.log("Labels - ", JSON.stringify(labels?.nodes));
+  console.log("Last commit state - ", headCommitState);
+  console.log("Labels - ", JSON.stringify(appliedLabels));
 
   return (
     mergeable === "MERGEABLE" &&
-    commits?.nodes[0].commit.status.state === "SUCCESS" &&
-    !labels?.nodes.some(({ name }) => name === Label.MERGE_TRAIN_PAUSED)
+    headCommitState === "SUCCESS" &&
+    !appliedLabels?.some((name) => name === Label.MERGE_TRAIN_PAUSED)
   );
 };
 
-export const getMergeableItems = (queue: Queue) => {
+export const getMergeableItemsState = (queue: Queue) => {
   const { nodes } = queue.repository.pullRequests;
 
   if (nodes.length) {
-    return sortByDate(nodes.filter((node) => isMergeable(node)));
+    return sortByDate(nodes).map(getMergeableState);
   } else {
     return [];
   }
