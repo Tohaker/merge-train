@@ -15,7 +15,8 @@ describe("Pause functions", () => {
 
     jest.mock("../graphql", () => ({
       addLabelToPullRequest: "add label",
-      getLabelsAndPullRequests: "get labels",
+      getLabelsAndPullRequests: "get prs",
+      getLabelsAndPullRequestsWithLabel: "get prs with label",
       createClient: mockCreateClient,
       Queue: jest.requireActual("../graphql").Queue,
       removeLabelFromPullRequest: "remove label",
@@ -46,11 +47,10 @@ describe("Pause functions", () => {
       it("should return false", async () => {
         const result = await pauseAll();
 
-        expect(mockRequest).toBeCalledWith("get labels", {
+        expect(mockRequest).toBeCalledWith("get prs", {
           owner: "owner",
           repo: "repo",
           labelToApply: "merge train paused",
-          labelsOnPullRequests: "ready for merge",
         });
 
         expect(result).toBe(false);
@@ -72,11 +72,10 @@ describe("Pause functions", () => {
       it("should return false", async () => {
         const result = await pauseAll();
 
-        expect(mockRequest).toBeCalledWith("get labels", {
+        expect(mockRequest).toBeCalledWith("get prs", {
           owner: "owner",
           repo: "repo",
           labelToApply: "merge train paused",
-          labelsOnPullRequests: "ready for merge",
         });
 
         expect(result).toBe(false);
@@ -106,11 +105,10 @@ describe("Pause functions", () => {
       it("should return false", async () => {
         const result = await pauseAll();
 
-        expect(mockRequest).toBeCalledWith("get labels", {
+        expect(mockRequest).toBeCalledWith("get prs", {
           owner: "owner",
           repo: "repo",
           labelToApply: "merge train paused",
-          labelsOnPullRequests: "ready for merge",
         });
 
         expect(result).toBe(false);
@@ -137,11 +135,10 @@ describe("Pause functions", () => {
       it("should add labels and return true", async () => {
         const result = await pauseAll();
 
-        expect(mockRequest).toBeCalledWith("get labels", {
+        expect(mockRequest).toBeCalledWith("get prs", {
           owner: "owner",
           repo: "repo",
           labelToApply: "merge train paused",
-          labelsOnPullRequests: "ready for merge",
         });
 
         expect(mockRequest).toBeCalledWith("add label", {
@@ -175,7 +172,7 @@ describe("Pause functions", () => {
       it("should return false", async () => {
         const result = await resumeAll();
 
-        expect(mockRequest).toBeCalledWith("get labels", {
+        expect(mockRequest).toBeCalledWith("get prs with label", {
           owner: "owner",
           repo: "repo",
           labelToApply: "merge train paused",
@@ -201,7 +198,7 @@ describe("Pause functions", () => {
       it("should return false", async () => {
         const result = await resumeAll();
 
-        expect(mockRequest).toBeCalledWith("get labels", {
+        expect(mockRequest).toBeCalledWith("get prs with label", {
           owner: "owner",
           repo: "repo",
           labelToApply: "merge train paused",
@@ -235,7 +232,7 @@ describe("Pause functions", () => {
       it("should return false", async () => {
         const result = await resumeAll();
 
-        expect(mockRequest).toBeCalledWith("get labels", {
+        expect(mockRequest).toBeCalledWith("get prs with label", {
           owner: "owner",
           repo: "repo",
           labelToApply: "merge train paused",
@@ -266,7 +263,7 @@ describe("Pause functions", () => {
       it("should add labels and return true", async () => {
         const result = await resumeAll();
 
-        expect(mockRequest).toBeCalledWith("get labels", {
+        expect(mockRequest).toBeCalledWith("get prs with label", {
           owner: "owner",
           repo: "repo",
           labelToApply: "merge train paused",

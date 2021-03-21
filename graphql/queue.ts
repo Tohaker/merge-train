@@ -1,8 +1,4 @@
-import {
-  MergeableState,
-  PullRequest,
-  StatusState,
-} from "@octokit/graphql-schema";
+import { PullRequest, StatusState } from "@octokit/graphql-schema";
 import {
   createClient,
   sortByDate,

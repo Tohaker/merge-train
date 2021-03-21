@@ -102,7 +102,7 @@ const httpTrigger: AzureFunction = async (
           channel,
           text: headline,
         });
-        await handleItemAdded(slackWebClient, pull_request, channel, context);
+        await handleItemAdded(slackWebClient, pull_request, channel);
       }
       break;
     }

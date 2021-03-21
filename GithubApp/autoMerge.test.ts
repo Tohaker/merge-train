@@ -54,11 +54,6 @@ const mockWebClient: WebClient = {
   },
 };
 
-const mockContext: Context = {
-  //@ts-ignore
-  log: jest.fn(),
-};
-
 const mockClient = jest.fn();
 
 beforeEach(() => {
@@ -85,17 +80,24 @@ describe("handleItemAdded", () => {
   describe("given the queue has 2 items", () => {
     beforeEach(() => {
       mockGetQueue.mockResolvedValue({
-        //@ts-ignore
-        repository: { pullRequests: { nodes: null } },
+        repository: {
+          //@ts-ignore
+          pullRequests: { nodes: null },
+          defaultBranchRef: {
+            //@ts-ignore
+            target: {
+              commitUrl: "https://commit.url",
+            },
+          },
+        },
       });
       //@ts-ignore
       mockGetItems.mockReturnValue([mockPR, mockPR]);
     });
 
     it("should not post any message", async () => {
-      await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
+      await handleItemAdded(mockWebClient, mockPR, "channel");
       expect(mockWebClient.chat.postMessage).not.toBeCalled();
-      expect(mockContext.log).toBeCalled();
     });
 
     describe("given any item in the queue has a paused label", () => {
@@ -122,11 +124,11 @@ describe("handleItemAdded", () => {
           },
         };
         //@ts-ignore
-        mockGetQueue.mockResolvedValue(mockQueue);
+        mockGetQueue.mockResolvedValueOnce(mockQueue);
       });
 
       it("should add a label to the pull request", async () => {
-        await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
+        await handleItemAdded(mockWebClient, mockPR, "channel");
 
         expect(mockClient).toBeCalledWith(addLabelToPullRequest, {
           labelId: "456",
@@ -156,11 +158,11 @@ describe("handleItemAdded", () => {
           },
         };
         //@ts-ignore
-        mockGetQueue.mockResolvedValue(mockQueue);
+        mockGetQueue.mockResolvedValueOnce(mockQueue);
       });
 
       it("should not add a label to the pull request", async () => {
-        await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
+        await handleItemAdded(mockWebClient, mockPR, "channel");
 
         expect(mockClient).not.toBeCalled();
       });
@@ -169,8 +171,61 @@ describe("handleItemAdded", () => {
 
   describe("given the queue has 1 item", () => {
     beforeEach(() => {
+      mockGetQueue.mockResolvedValue({
+        repository: {
+          //@ts-ignore
+          pullRequests: { nodes: null },
+          defaultBranchRef: {
+            //@ts-ignore
+            target: {
+              commitUrl: "https://commit.url",
+            },
+          },
+        },
+      });
       //@ts-ignore
       mockGetItems.mockReturnValue([mockPR]);
+    });
+
+    describe("given the queue is paused", () => {
+      beforeEach(() => {
+        const mockQueue = {
+          repository: {
+            pullRequests: {
+              nodes: [
+                {
+                  labels: {
+                    nodes: [
+                      { id: "123", name: "ready for merge" },
+                      { id: "456", name: "merge train paused" },
+                    ],
+                  },
+                },
+                {
+                  labels: {
+                    nodes: [{ id: "123", name: "ready for merge" }],
+                  },
+                },
+              ],
+            },
+          },
+        };
+        //@ts-ignore
+        mockGetQueue.mockResolvedValueOnce(mockQueue);
+      });
+
+      it("should do nothing", async () => {
+        await handleItemAdded(mockWebClient, mockPR, "channel");
+
+        expect(mockClient).not.toBeCalledWith(getCommitStatus, {
+          commitRef: "https://commit.url",
+        });
+        expect(mockClient).not.toBeCalledWith(mergePullRequest, {
+          prId: "nodeid123",
+          mergeMethod: "REBASE",
+        });
+        expect(mockWebClient.chat.postMessage).not.toBeCalled();
+      });
     });
 
     describe("given the default branch head commit has a successful status", () => {
@@ -193,10 +248,7 @@ describe("handleItemAdded", () => {
                 nodes: [
                   {
                     labels: {
-                      nodes: [
-                        { id: "123", name: "ready for merge" },
-                        { id: "456", name: "merge train paused" },
-                      ],
+                      nodes: [{ id: "123", name: "ready for merge" }],
                     },
                   },
                   {
@@ -212,14 +264,10 @@ describe("handleItemAdded", () => {
           mockGetQueue.mockResolvedValue(mockQueue);
           mockPR.mergeable = true;
         });
+
         describe('given the head ref starts with "release/"', () => {
           it("should rebase the pull request", async () => {
-            await handleItemAdded(
-              mockWebClient,
-              mockPR,
-              "channel",
-              mockContext
-            );
+            await handleItemAdded(mockWebClient, mockPR, "channel");
 
             expect(mockClient).toBeCalledWith(getCommitStatus, {
               commitRef: "https://commit.url",
@@ -238,12 +286,7 @@ describe("handleItemAdded", () => {
           });
 
           it("should squash merge the pull request", async () => {
-            await handleItemAdded(
-              mockWebClient,
-              mockPR,
-              "channel",
-              mockContext
-            );
+            await handleItemAdded(mockWebClient, mockPR, "channel");
 
             expect(mockClient).toBeCalledWith(getCommitStatus, {
               commitRef: "https://commit.url",
@@ -263,7 +306,7 @@ describe("handleItemAdded", () => {
         });
 
         it("should post a message", async () => {
-          await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
+          await handleItemAdded(mockWebClient, mockPR, "channel");
           expect(mockWebClient.chat.postMessage).toBeCalledWith({
             icon_emoji: "emoji",
             text:
@@ -282,7 +325,7 @@ describe("handleItemAdded", () => {
       });
 
       it("should not post a message", async () => {
-        await handleItemAdded(mockWebClient, mockPR, "channel", mockContext);
+        await handleItemAdded(mockWebClient, mockPR, "channel");
 
         expect(mockClient).toBeCalledWith(getCommitStatus, {
           commitRef: "https://commit.url",

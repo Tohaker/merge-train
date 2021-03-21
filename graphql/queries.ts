@@ -57,6 +57,25 @@ export const getCommitStatus = `
   }
 `;
 
+export const getLabelsAndPullRequestsWithLabel = `
+  query GetLabels($owner: String!, $repo: String!, $labelToApply: String!, $labelsOnPullRequests: String!) {
+    repository(owner: $owner, name: $repo) {
+      labels(query: $labelToApply, first: 1) {
+        nodes {
+          name
+          id
+        }
+      }
+      pullRequests(labels: [$labelsOnPullRequests], states: [OPEN], last: 30) {
+        nodes {
+          title
+          id
+        }
+      }
+    }
+  }
+`;
+
 export const getLabelsAndPullRequests = `
   query GetLabels($owner: String!, $repo: String!, $labelToApply: String!, $labelsOnPullRequests: String!) {
     repository(owner: $owner, name: $repo) {

@@ -1,4 +1,3 @@
-import { Context } from "@azure/functions";
 import { WebClient } from "@slack/web-api";
 import { PullRequest, StatusEvent } from "@octokit/webhooks-definitions/schema";
 import { Label as PullRequestLabel, Commit } from "@octokit/graphql-schema";
@@ -46,18 +45,19 @@ const mergePR = async (
 export const handleItemAdded = async (
   client: WebClient,
   pullRequest: PullRequest,
-  channel: string,
-  context: Context
+  channel: string
 ) => {
   const queue = await getQueue();
+  const labels = getLabels(queue);
   const graphqlClient = await createClient();
 
-  if (getItems(queue).length > 1) {
-    context.log("Queue was not empty, no new merges to perform");
+  const paused = isPaused(labels);
 
-    const labels = getLabels(queue);
-    if (isPaused(labels)) {
-      context.log("Pausing this PR");
+  if (getItems(queue).length > 1) {
+    console.log("Queue was not empty, no new merges to perform");
+
+    if (paused) {
+      console.log("Pausing this PR");
 
       await graphqlClient(addLabelToPullRequest, {
         labelId: labels.find(({ name }) => name === Label.MERGE_TRAIN_PAUSED)
@@ -66,6 +66,11 @@ export const handleItemAdded = async (
       });
     }
 
+    return;
+  }
+
+  if (paused) {
+    console.log("Queue paused");
     return;
   }
 
