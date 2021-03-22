@@ -59,6 +59,11 @@ variable "github_repository" {
   type = string
 }
 
+variable "default_enabled" {
+  type    = string
+  default = "false"
+}
+
 resource "random_string" "storage_name" {
   length  = 24
   upper   = false
