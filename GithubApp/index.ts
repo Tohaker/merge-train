@@ -129,7 +129,7 @@ const httpTrigger: AzureFunction = async (
     }
     case "review_requested": {
       // This prevents duplicates of the same review posts
-      if ("requested_team" in req.body) {
+      if ("requested_team" in req.body && !pull_request.draft) {
         const channel = channels[ChannelName.REVIEWS];
         const headline = "A PR has been marked for review";
         const reviewers = await createAssignmentText(

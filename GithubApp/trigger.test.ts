@@ -68,6 +68,7 @@ describe("HTTP Trigger", () => {
             avatar_url: "avatar2 url",
           },
         ],
+        draft: false,
       },
       label: {
         name: "",
@@ -262,6 +263,22 @@ describe("HTTP Trigger", () => {
       });
 
       describe("given the request does not have a requested_team", () => {
+        it("should not post a message to slack", async () => {
+          await httpTrigger(mockContext, mockRequest);
+
+          expect(mockPostMessage).not.toBeCalled();
+        });
+      });
+
+      describe("given the pull request is in draft", () => {
+        beforeEach(() => {
+          mockRequest.body.pull_request.draft = true;
+        });
+
+        afterEach(() => {
+          mockRequest.body.pull_request.draft = false;
+        });
+
         it("should not post a message to slack", async () => {
           await httpTrigger(mockContext, mockRequest);
 
