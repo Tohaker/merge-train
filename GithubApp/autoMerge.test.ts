@@ -59,6 +59,7 @@ const mockClient = jest.fn();
 beforeEach(() => {
   //@ts-ignore
   mockCreateClient.mockResolvedValue(mockClient);
+  process.env.MERGE_ENABLED = "true";
 });
 
 describe("handleItemAdded", () => {
@@ -228,109 +229,225 @@ describe("handleItemAdded", () => {
       });
     });
 
-    describe("given the default branch head commit has a successful status", () => {
+    describe("given MERGE_ENABLED is true", () => {
       beforeEach(() => {
-        mockClient.mockResolvedValue({
-          resource: { status: { state: "SUCCESS" } },
-        });
+        process.env.MERGE_ENABLED = "true";
       });
-
-      describe("given the pr is mergeable", () => {
+      describe("given the default branch head commit has a successful status", () => {
         beforeEach(() => {
-          const mockQueue = {
-            repository: {
-              defaultBranchRef: {
-                target: {
-                  commitUrl: "https://commit.url",
+          mockClient.mockResolvedValue({
+            resource: { status: { state: "SUCCESS" } },
+          });
+        });
+
+        describe("given the pr is mergeable", () => {
+          beforeEach(() => {
+            const mockQueue = {
+              repository: {
+                defaultBranchRef: {
+                  target: {
+                    commitUrl: "https://commit.url",
+                  },
+                },
+                pullRequests: {
+                  nodes: [
+                    {
+                      labels: {
+                        nodes: [{ id: "123", name: "ready for merge" }],
+                      },
+                    },
+                    {
+                      labels: {
+                        nodes: [{ id: "123", name: "ready for merge" }],
+                      },
+                    },
+                  ],
                 },
               },
-              pullRequests: {
-                nodes: [
-                  {
-                    labels: {
-                      nodes: [{ id: "123", name: "ready for merge" }],
-                    },
-                  },
-                  {
-                    labels: {
-                      nodes: [{ id: "123", name: "ready for merge" }],
-                    },
-                  },
-                ],
-              },
-            },
-          };
-          //@ts-ignore
-          mockGetQueue.mockResolvedValue(mockQueue);
-          mockPR.mergeable = true;
-        });
+            };
+            //@ts-ignore
+            mockGetQueue.mockResolvedValue(mockQueue);
+            mockPR.mergeable = true;
+          });
 
-        describe('given the head ref starts with "release/"', () => {
-          it("should rebase the pull request", async () => {
-            await handleItemAdded(mockWebClient, mockPR, "channel");
+          describe('given the head ref starts with "release/"', () => {
+            it("should rebase the pull request", async () => {
+              await handleItemAdded(mockWebClient, mockPR, "channel");
 
-            expect(mockClient).toBeCalledWith(getCommitStatus, {
-              commitRef: "https://commit.url",
+              expect(mockClient).toBeCalledWith(getCommitStatus, {
+                commitRef: "https://commit.url",
+              });
+              expect(mockClient).toBeCalledWith(mergePullRequest, {
+                prId: "nodeid123",
+                mergeMethod: "REBASE",
+              });
+              expect(mockWebClient.chat.postMessage).not.toBeCalled();
             });
-            expect(mockClient).toBeCalledWith(mergePullRequest, {
-              prId: "nodeid123",
-              mergeMethod: "REBASE",
+          });
+
+          describe("given the head ref starts with anything else", () => {
+            beforeEach(() => {
+              mockPR.head.ref = "bugfix/some-branch";
             });
-            expect(mockWebClient.chat.postMessage).not.toBeCalled();
+
+            it("should squash merge the pull request", async () => {
+              await handleItemAdded(mockWebClient, mockPR, "channel");
+
+              expect(mockClient).toBeCalledWith(getCommitStatus, {
+                commitRef: "https://commit.url",
+              });
+              expect(mockClient).toBeCalledWith(mergePullRequest, {
+                prId: "nodeid123",
+                mergeMethod: "SQUASH",
+              });
+              expect(mockWebClient.chat.postMessage).not.toBeCalled();
+            });
           });
         });
 
-        describe("given the head ref starts with anything else", () => {
+        describe("given the pr is not mergeable", () => {
           beforeEach(() => {
-            mockPR.head.ref = "bugfix/some-branch";
+            mockPR.mergeable = false;
           });
 
-          it("should squash merge the pull request", async () => {
+          it("should post a message", async () => {
             await handleItemAdded(mockWebClient, mockPR, "channel");
-
-            expect(mockClient).toBeCalledWith(getCommitStatus, {
-              commitRef: "https://commit.url",
+            expect(mockWebClient.chat.postMessage).toBeCalledWith({
+              icon_emoji: "emoji",
+              text:
+                "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
+              channel: "channel",
             });
-            expect(mockClient).toBeCalledWith(mergePullRequest, {
-              prId: "nodeid123",
-              mergeMethod: "SQUASH",
-            });
-            expect(mockWebClient.chat.postMessage).not.toBeCalled();
           });
         });
       });
 
-      describe("given the pr is not mergeable", () => {
+      describe("given the default branch head commit has a pending status", () => {
         beforeEach(() => {
-          mockPR.mergeable = false;
+          mockClient.mockResolvedValue({
+            resource: { status: { state: "PENDING" } },
+          });
         });
 
-        it("should post a message", async () => {
+        it("should not post a message", async () => {
           await handleItemAdded(mockWebClient, mockPR, "channel");
-          expect(mockWebClient.chat.postMessage).toBeCalledWith({
-            icon_emoji: "emoji",
-            text:
-              "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
-            channel: "channel",
+
+          expect(mockClient).toBeCalledWith(getCommitStatus, {
+            commitRef: "https://commit.url",
           });
+          expect(mockWebClient.chat.postMessage).not.toBeCalled();
         });
       });
     });
 
-    describe("given the default branch head commit has a pending status", () => {
+    describe("given MERGE_ENABLED is false", () => {
       beforeEach(() => {
-        mockClient.mockResolvedValue({
-          resource: { status: { state: "PENDING" } },
+        process.env.MERGE_ENABLED = "false";
+      });
+      describe("given the default branch head commit has a successful status", () => {
+        beforeEach(() => {
+          mockClient.mockResolvedValue({
+            resource: { status: { state: "SUCCESS" } },
+          });
+        });
+
+        describe("given the pr is mergeable", () => {
+          beforeEach(() => {
+            const mockQueue = {
+              repository: {
+                defaultBranchRef: {
+                  target: {
+                    commitUrl: "https://commit.url",
+                  },
+                },
+                pullRequests: {
+                  nodes: [
+                    {
+                      labels: {
+                        nodes: [{ id: "123", name: "ready for merge" }],
+                      },
+                    },
+                    {
+                      labels: {
+                        nodes: [{ id: "123", name: "ready for merge" }],
+                      },
+                    },
+                  ],
+                },
+              },
+            };
+            //@ts-ignore
+            mockGetQueue.mockResolvedValue(mockQueue);
+            mockPR.mergeable = true;
+          });
+
+          describe('given the head ref starts with "release/"', () => {
+            it("should not rebase the pull request", async () => {
+              await handleItemAdded(mockWebClient, mockPR, "channel");
+
+              expect(mockClient).toBeCalledWith(getCommitStatus, {
+                commitRef: "https://commit.url",
+              });
+              expect(mockClient).not.toBeCalledWith(mergePullRequest, {
+                prId: "nodeid123",
+                mergeMethod: "REBASE",
+              });
+              expect(mockWebClient.chat.postMessage).not.toBeCalled();
+            });
+          });
+
+          describe("given the head ref starts with anything else", () => {
+            beforeEach(() => {
+              mockPR.head.ref = "bugfix/some-branch";
+            });
+
+            it("should not squash merge the pull request", async () => {
+              await handleItemAdded(mockWebClient, mockPR, "channel");
+
+              expect(mockClient).toBeCalledWith(getCommitStatus, {
+                commitRef: "https://commit.url",
+              });
+              expect(mockClient).not.toBeCalledWith(mergePullRequest, {
+                prId: "nodeid123",
+                mergeMethod: "SQUASH",
+              });
+              expect(mockWebClient.chat.postMessage).not.toBeCalled();
+            });
+          });
+        });
+
+        describe("given the pr is not mergeable", () => {
+          beforeEach(() => {
+            mockPR.mergeable = false;
+          });
+
+          it("should post a message", async () => {
+            await handleItemAdded(mockWebClient, mockPR, "channel");
+            expect(mockWebClient.chat.postMessage).toBeCalledWith({
+              icon_emoji: "emoji",
+              text:
+                "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
+              channel: "channel",
+            });
+          });
         });
       });
 
-      it("should not post a message", async () => {
-        await handleItemAdded(mockWebClient, mockPR, "channel");
-
-        expect(mockClient).toBeCalledWith(getCommitStatus, {
-          commitRef: "https://commit.url",
+      describe("given the default branch head commit has a pending status", () => {
+        beforeEach(() => {
+          mockClient.mockResolvedValue({
+            resource: { status: { state: "PENDING" } },
+          });
         });
-        expect(mockWebClient.chat.postMessage).not.toBeCalled();
+
+        it("should not post a message", async () => {
+          await handleItemAdded(mockWebClient, mockPR, "channel");
+
+          expect(mockClient).toBeCalledWith(getCommitStatus, {
+            commitRef: "https://commit.url",
+          });
+          expect(mockWebClient.chat.postMessage).not.toBeCalled();
+        });
       });
     });
   });

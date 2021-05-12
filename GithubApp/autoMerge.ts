@@ -17,6 +17,7 @@ import {
   Queue,
 } from "../graphql";
 import { graphql } from "@octokit/graphql/dist-types/types";
+import { KnownBlock } from "@slack/types";
 
 const getLabels = (queue: Queue): PullRequestLabel[] =>
   queue.repository.pullRequests.nodes?.reduce(
@@ -89,7 +90,9 @@ export const handleItemAdded = async (
       const branch = pullRequest.head.ref;
 
       console.log(`Merging: ${pullRequest.title}`);
-      await mergePR(graphqlClient, id, branch);
+
+      const shouldMerge = process.env.MERGE_ENABLED === "true";
+      shouldMerge && (await mergePR(graphqlClient, id, branch));
     } else {
       await client.chat.postMessage({
         icon_emoji,
@@ -101,19 +104,24 @@ export const handleItemAdded = async (
 };
 
 const createBlocks = (states: MergeableItemState[]) => {
-  const blocks = [
+  let text = "*No Pull Requests are ready to merge*";
+  if (states.length) text += "\nReview their statuses below";
+
+  const blocks: KnownBlock[] = [
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text:
-          "*No Pull Requests are ready to merge*\nReview their statuses below",
+        text,
       },
     },
-    {
-      type: "divider",
-    },
   ];
+
+  if (states.length)
+    blocks.push({
+      type: "divider",
+    });
+  else return blocks;
 
   const sections = states.reduce((acc, state) => {
     const link = `<${state.url}|${state.title}>`;
@@ -166,7 +174,8 @@ export const handleStateReported = async (
       const { id, headRefName } = prToMerge;
 
       console.log(`Merging: ${prToMerge.title}`);
-      await mergePR(graphqlClient, id, headRefName);
+      const shouldMerge = process.env.MERGE_ENABLED === "true";
+      shouldMerge && (await mergePR(graphqlClient, id, headRefName));
     } else if (!isPaused(labels)) {
       await client.chat.postMessage({
         icon_emoji,

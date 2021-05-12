@@ -66,6 +66,7 @@ resource "azurerm_function_app" "function" {
     GITHUB_REPOSITORY              = var.github_repository
     GITHUB_APP_ID                  = var.github_app_id
     GITHUB_INSTALLATION_ID         = var.github_installation_id
+    MERGE_ENABLED                  = var.default_enabled
     PRIVATE_KEY                    = var.github_private_key
   }
 }
