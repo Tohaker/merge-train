@@ -1,5 +1,5 @@
 import { WebClient } from "@slack/web-api";
-import { PullRequest, StatusEvent } from "@octokit/webhooks-definitions/schema";
+import { PullRequest, StatusEvent } from "@octokit/webhooks-types";
 import {
   getItems,
   getMergeableItemsState,
@@ -13,7 +13,6 @@ import {
   createClient,
 } from "../graphql";
 import { handleItemAdded, handleStateReported } from "./autoMerge";
-import { Context } from "@azure/functions";
 
 jest.mock("../graphql/queue");
 jest.mock("../graphql");
@@ -39,9 +38,8 @@ jest.mock("../common/config", () => ({
 
 const mockGetQueue = getQueue as jest.MockedFunction<typeof getQueue>;
 const mockGetItems = getItems as jest.MockedFunction<typeof getItems>;
-const mockGetMergeableItemsState = getMergeableItemsState as jest.MockedFunction<
-  typeof getMergeableItemsState
->;
+const mockGetMergeableItemsState =
+  getMergeableItemsState as jest.MockedFunction<typeof getMergeableItemsState>;
 const mockIsMergeable = isMergeable as jest.MockedFunction<typeof isMergeable>;
 const mockCreateClient = createClient as jest.MockedFunction<
   typeof createClient
@@ -314,8 +312,7 @@ describe("handleItemAdded", () => {
             await handleItemAdded(mockWebClient, mockPR, "channel");
             expect(mockWebClient.chat.postMessage).toBeCalledWith({
               icon_emoji: "emoji",
-              text:
-                "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
+              text: "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
               channel: "channel",
             });
           });
@@ -425,8 +422,7 @@ describe("handleItemAdded", () => {
             await handleItemAdded(mockWebClient, mockPR, "channel");
             expect(mockWebClient.chat.postMessage).toBeCalledWith({
               icon_emoji: "emoji",
-              text:
-                "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
+              text: "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
               channel: "channel",
             });
           });
@@ -617,8 +613,7 @@ describe("handleStateReported", () => {
                 type: "section",
                 text: {
                   type: "mrkdwn",
-                  text:
-                    "*No Pull Requests are ready to merge*\nReview their statuses below",
+                  text: "*No Pull Requests are ready to merge*\nReview their statuses below",
                 },
               },
               {
@@ -636,8 +631,7 @@ describe("handleStateReported", () => {
                 elements: [
                   {
                     type: "mrkdown",
-                    text:
-                      "Mergeable: `CONFLICTING`\nHead Commit State: `SUCCESS`\nLabels: `Ready for merge`",
+                    text: "Mergeable: `CONFLICTING`\nHead Commit State: `SUCCESS`\nLabels: `Ready for merge`",
                   },
                 ],
               },
@@ -653,8 +647,7 @@ describe("handleStateReported", () => {
                 elements: [
                   {
                     type: "mrkdown",
-                    text:
-                      "Mergeable: `UNKNOWN`\nHead Commit State: `FAILURE`\nLabels: `Ready for merge`, `merge train paused`",
+                    text: "Mergeable: `UNKNOWN`\nHead Commit State: `FAILURE`\nLabels: `Ready for merge`, `merge train paused`",
                   },
                 ],
               },
