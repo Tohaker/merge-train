@@ -3,7 +3,7 @@ import {
   PullRequestEvent,
   StatusEvent,
   PullRequest,
-} from "@octokit/webhooks-definitions/schema";
+} from "@octokit/webhooks-types";
 
 export interface Request extends HttpRequest {
   body: PullRequestEvent | StatusEvent;

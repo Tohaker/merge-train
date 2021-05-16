@@ -1,10 +1,7 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { App } from "@slack/bolt";
 import { AzureFunctionsReceiver } from "bolt-azure-functions-receiver";
-import dotenv from "dotenv";
 import { parseCommand } from "./command";
-
-dotenv.config();
 
 const httpTrigger: AzureFunction = async function (
   context: Context,

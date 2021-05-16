@@ -6,16 +6,13 @@ import {
   StatusEvent,
   Team,
   User,
-} from "@octokit/webhooks-definitions/schema";
-import dotenv from "dotenv";
+} from "@octokit/webhooks-types";
 import { createSlackPanel } from "./slack";
 import { Request, SlackUser } from "./types";
 import { ChannelName, Label, icon_emoji } from "../common/config";
 import { handleItemAdded, handleStateReported } from "./autoMerge";
 import { checkSignature } from "../common/checkSignature";
 import { Conversation } from "../common/types";
-
-dotenv.config();
 
 const createAssignmentText = async (
   client: WebClient,
@@ -54,10 +51,9 @@ const httpTrigger: AzureFunction = async (
   }
 
   const slackWebClient = new WebClient(process.env.SLACK_BOT_TOKEN);
-  const channels: Record<
-    string,
-    string
-  > = ((await slackWebClient.conversations.list()) as Conversation).channels.reduce(
+  const channels: Record<string, string> = (
+    (await slackWebClient.conversations.list()) as Conversation
+  ).channels.reduce(
     (acc, channel) => ((acc[channel.name] = channel.id), acc),
     {}
   );
@@ -127,6 +123,7 @@ const httpTrigger: AzureFunction = async (
       }
       break;
     }
+    case "ready_for_review":
     case "review_requested": {
       // This prevents duplicates of the same review posts
       if ("requested_team" in req.body && !pull_request.draft) {

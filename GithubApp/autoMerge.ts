@@ -1,5 +1,5 @@
 import { WebClient } from "@slack/web-api";
-import { PullRequest, StatusEvent } from "@octokit/webhooks-definitions/schema";
+import { PullRequest, StatusEvent } from "@octokit/webhooks-types";
 import { Label as PullRequestLabel, Commit } from "@octokit/graphql-schema";
 import {
   getQueue,
