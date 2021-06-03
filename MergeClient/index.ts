@@ -3,10 +3,10 @@ import { App } from "@slack/bolt";
 import { AzureFunctionsReceiver } from "bolt-azure-functions-receiver";
 import { parseCommand } from "./command";
 
-const httpTrigger: AzureFunction = async function (
+const slackTrigger: AzureFunction = async (
   context: Context,
   req: HttpRequest
-): Promise<void> {
+) => {
   const signingSecret = process.env.SLACK_SIGNING_SECRET;
   const receiver = new AzureFunctionsReceiver(signingSecret, context.log);
   const app = new App({
@@ -26,4 +26,12 @@ const httpTrigger: AzureFunction = async function (
   context.done(null, { status: 200 });
 };
 
-export default httpTrigger;
+const teamsTrigger: AzureFunction = async (
+  context: Context,
+  req: HttpRequest
+) => {};
+
+const trigger =
+  process.env.CLIENT_PLATFORM === "slack" ? slackTrigger : teamsTrigger;
+
+export default trigger;
