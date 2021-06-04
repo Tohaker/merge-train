@@ -1,9 +1,10 @@
 import { AzureFunction, Context, HttpRequest } from "@azure/functions";
 import { App } from "@slack/bolt";
 import { AzureFunctionsReceiver } from "bolt-azure-functions-receiver";
+import { isMessageAuthorized } from "./auth";
 import { parseCommand } from "./command";
 
-const slackTrigger: AzureFunction = async (
+export const slackTrigger: AzureFunction = async (
   context: Context,
   req: HttpRequest
 ) => {
@@ -26,10 +27,17 @@ const slackTrigger: AzureFunction = async (
   context.done(null, { status: 200 });
 };
 
-const teamsTrigger: AzureFunction = async (
+export const teamsTrigger: AzureFunction = async (
   context: Context,
   req: HttpRequest
-) => {};
+) => {
+  const isAuthorized = isMessageAuthorized(req);
+  if (!isAuthorized) {
+    return (context.res = {
+      status: 401,
+    });
+  }
+};
 
 const trigger =
   process.env.CLIENT_PLATFORM === "slack" ? slackTrigger : teamsTrigger;

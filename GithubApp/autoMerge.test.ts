@@ -54,6 +54,8 @@ const mockWebClient: WebClient = {
 
 const mockClient = jest.fn();
 
+jest.spyOn(console, "log").mockImplementation(jest.fn());
+
 beforeEach(() => {
   //@ts-ignore
   mockCreateClient.mockResolvedValue(mockClient);
