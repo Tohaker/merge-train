@@ -3,6 +3,7 @@ import { App } from "@slack/bolt";
 import { AzureFunctionsReceiver } from "bolt-azure-functions-receiver";
 import { isMessageAuthorized } from "./auth";
 import { parseCommand } from "./command";
+import { icon_emoji } from "../common/config";
 
 export const slackTrigger: AzureFunction = async (
   context: Context,
@@ -18,7 +19,27 @@ export const slackTrigger: AzureFunction = async (
 
   app.command("/merge", async ({ command: { text }, respond, ack }) => {
     await ack();
-    await parseCommand({ text, respond });
+
+    const sendMessage = (text: string, ephemeral = false) =>
+      ephemeral
+        ? respond({ icon_emoji, response_type: "ephemeral", text })
+        : respond({
+            icon_emoji,
+            response_type: "in_channel",
+            text,
+            blocks: [
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text,
+                },
+              },
+            ],
+          });
+
+    const command = text.split(" ")[0].toLowerCase();
+    await parseCommand({ command, respond: sendMessage });
   });
 
   const body = await receiver.requestHandler(req);
@@ -26,6 +47,8 @@ export const slackTrigger: AzureFunction = async (
 
   context.done(null, { status: 200 });
 };
+
+const extractCommand = (text: string) => text.split("</at>")[1].trim();
 
 export const teamsTrigger: AzureFunction = async (
   context: Context,
@@ -37,9 +60,24 @@ export const teamsTrigger: AzureFunction = async (
       status: 401,
     });
   }
+
+  const command = extractCommand(req.body.text);
+
+  const respond = async (text: string) => {
+    context.res = {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: {
+        type: "message",
+        text,
+      },
+    };
+  };
+
+  await parseCommand({ command, respond });
 };
 
-const trigger =
+export const run =
   process.env.CLIENT_PLATFORM === "slack" ? slackTrigger : teamsTrigger;
-
-export default trigger;

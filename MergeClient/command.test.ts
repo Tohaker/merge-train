@@ -1,3 +1,29 @@
+import { getList } from "./list";
+import { pauseAll, resumeAll } from "./pause";
+
+jest.mock("../common/config", () => ({
+  icon_emoji: "emoji",
+}));
+jest.mock("./constants", () => ({
+  helpText: "help",
+  invalidCommand: "invalid",
+  nextSuccess: () => "next success",
+  listEmpty: "list empty",
+  listSuccess: () => "list success",
+  pauseSuccess: "pause success",
+  pauseFailure: "pause failure",
+  resumeSuccess: "resume success",
+  resumeFailure: "resume failure",
+}));
+jest.mock("./list");
+jest.mock("./pause");
+
+const mockGetList = getList as jest.MockedFunction<typeof getList>;
+const mockPauseAll = pauseAll as jest.MockedFunction<typeof pauseAll>;
+const mockResumeAll = resumeAll as jest.MockedFunction<typeof resumeAll>;
+
+jest.spyOn(console, "log").mockImplementation(() => {});
+
 describe("Parse Command", () => {
   const mockList = ["http://url.1", "http://url.2"];
 
@@ -9,26 +35,8 @@ describe("Parse Command", () => {
   let parseCommand;
 
   beforeEach(() => {
-    jest.spyOn(console, "log").mockImplementation(() => {});
     jest.clearAllMocks();
 
-    jest.mock("../common/config", () => ({
-      icon_emoji: "emoji",
-    }));
-    jest.mock("./constants", () => ({
-      helpText: "help",
-      invalidCommand: "invalid",
-      nextSuccess: () => "next success",
-      listEmpty: "list empty",
-      listSuccess: () => "list success",
-      pauseSuccess: "pause success",
-      pauseFailure: "pause failure",
-      resumeSuccess: "resume success",
-      resumeFailure: "resume failure",
-    }));
-    jest.mock("./list", () => ({
-      getList: mockGetList,
-    }));
     jest.mock("./pause", () => ({
       pauseAll: mockPauseAll,
       resumeAll: mockResumeAll,
