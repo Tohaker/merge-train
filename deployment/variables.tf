@@ -64,6 +64,11 @@ variable "default_enabled" {
   default = "false"
 }
 
+variable "teams_token" {
+  type        = string
+  description = "Outgoing webhook token for Teams Client"
+}
+
 resource "random_string" "storage_name" {
   length  = 24
   upper   = false
