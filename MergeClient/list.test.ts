@@ -5,9 +5,9 @@ jest.mock("../graphql/queue");
 
 const mockGetQueue = getQueue as jest.MockedFunction<typeof getQueue>;
 
-describe("List", () => {
-  jest.spyOn(console, "error").mockImplementation(() => {});
+jest.spyOn(console, "error").mockImplementation(() => {});
 
+describe("List", () => {
   const mockData = {
     repository: {
       pullRequests: {
@@ -19,16 +19,41 @@ describe("List", () => {
     },
   };
 
-  describe("given the data request is successful", () => {
+  describe("given the client is slack", () => {
     beforeEach(() => {
-      //@ts-ignore
-      mockGetQueue.mockResolvedValue(mockData);
+      process.env.CLIENT_PLATFORM = "slack";
     });
 
-    it("should return a list of PRs in ascending date order", async () => {
-      const list = await getList();
+    describe("given the data request is successful", () => {
+      beforeEach(() => {
+        //@ts-ignore
+        mockGetQueue.mockResolvedValue(mockData);
+      });
 
-      expect(list).toEqual(["<url2|title2>", "<url1|title1>"]);
+      it("should return a list of PRs in ascending date order", async () => {
+        const list = await getList();
+
+        expect(list).toEqual(["<url2|title2>", "<url1|title1>"]);
+      });
+    });
+  });
+
+  describe("given the client is teams", () => {
+    beforeEach(() => {
+      process.env.CLIENT_PLATFORM = "teams";
+    });
+
+    describe("given the data request is successful", () => {
+      beforeEach(() => {
+        //@ts-ignore
+        mockGetQueue.mockResolvedValue(mockData);
+      });
+
+      it("should return a list of PRs in ascending date order", async () => {
+        const list = await getList();
+
+        expect(list).toEqual(["[title2](url2)", "[title1](url1)"]);
+      });
     });
   });
 
