@@ -30,7 +30,9 @@ const createMarkdownList = (items: any[]) =>
 
 export const parseCommand = async ({ command, respond }: Props) => {
   console.log(`Command: ${command}`);
-  if (!(<any>Object).values(CommandType).includes(command)) {
+
+  const commandType = command.split(" ")[0];
+  if (!(<any>Object).values(CommandType).includes(commandType)) {
     await respond(invalidCommand, true);
 
     return;
@@ -38,7 +40,7 @@ export const parseCommand = async ({ command, respond }: Props) => {
 
   const list = await getList();
 
-  switch (command) {
+  switch (commandType) {
     case CommandType.NEXT:
       if (list.length) await respond(nextSuccess(list[0]));
       else await respond(listEmpty);

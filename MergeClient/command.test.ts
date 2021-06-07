@@ -1,5 +1,6 @@
 import { getList } from "./list";
 import { pauseAll, resumeAll } from "./pause";
+import { parseCommand } from "./command";
 
 jest.mock("../common/config", () => ({
   icon_emoji: "emoji",
@@ -28,42 +29,9 @@ describe("Parse Command", () => {
   const mockList = ["http://url.1", "http://url.2"];
 
   const mockRespond = jest.fn();
-  const mockGetList = jest.fn();
-  const mockPauseAll = jest.fn();
-  const mockResumeAll = jest.fn();
-
-  let parseCommand;
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    jest.mock("./pause", () => ({
-      pauseAll: mockPauseAll,
-      resumeAll: mockResumeAll,
-    }));
-
-    parseCommand = require("./command").parseCommand;
-  });
-
-  const blocks = (text) => ({
-    icon_emoji: "emoji",
-    response_type: "in_channel",
-    text,
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text,
-        },
-      },
-    ],
-  });
-
-  const response = (text) => ({
-    icon_emoji: "emoji",
-    response_type: "ephemeral",
-    text,
   });
 
   describe("given the next command is sent", () => {
@@ -74,12 +42,12 @@ describe("Parse Command", () => {
 
       it("should send a message with the first url", async () => {
         await parseCommand({
-          text: "next",
+          command: "next",
           respond: mockRespond,
         });
 
         expect(mockGetList).toBeCalled();
-        expect(mockRespond).toBeCalledWith(blocks("next success"));
+        expect(mockRespond).toBeCalledWith("next success");
       });
     });
 
@@ -90,12 +58,12 @@ describe("Parse Command", () => {
 
       it("should send a message that the list is empty", async () => {
         await parseCommand({
-          text: "next",
+          command: "next",
           respond: mockRespond,
         });
 
         expect(mockGetList).toBeCalled();
-        expect(mockRespond).toBeCalledWith(blocks("list empty"));
+        expect(mockRespond).toBeCalledWith("list empty");
       });
     });
   });
@@ -108,11 +76,11 @@ describe("Parse Command", () => {
 
       it("should send a message with the entire list", async () => {
         await parseCommand({
-          text: "list",
+          command: "list",
           respond: mockRespond,
         });
 
-        expect(mockRespond).toBeCalledWith(response("list success"));
+        expect(mockRespond).toBeCalledWith("list success", true);
       });
 
       describe("given the list is empty", () => {
@@ -122,10 +90,10 @@ describe("Parse Command", () => {
 
         it("should send a message that the list is empty", async () => {
           await parseCommand({
-            text: "list",
+            command: "list",
             respond: mockRespond,
           });
-          expect(mockRespond).toBeCalledWith(response("list empty"));
+          expect(mockRespond).toBeCalledWith("list empty", true);
         });
       });
     });
@@ -137,11 +105,11 @@ describe("Parse Command", () => {
 
       it("should send a message with the entire list", async () => {
         await parseCommand({
-          text: "list public",
+          command: "list public",
           respond: mockRespond,
         });
 
-        expect(mockRespond).toBeCalledWith(blocks("list success"));
+        expect(mockRespond).toBeCalledWith("list success", false);
       });
 
       describe("given the list is empty", () => {
@@ -151,10 +119,10 @@ describe("Parse Command", () => {
 
         it("should send a message that the list is empty", async () => {
           await parseCommand({
-            text: "list public",
+            command: "list public",
             respond: mockRespond,
           });
-          expect(mockRespond).toBeCalledWith(blocks("list empty"));
+          expect(mockRespond).toBeCalledWith("list empty", false);
         });
       });
     });
@@ -168,10 +136,10 @@ describe("Parse Command", () => {
 
       it("should send a success message", async () => {
         await parseCommand({
-          text: "pause",
+          command: "pause",
           respond: mockRespond,
         });
-        expect(mockRespond).toBeCalledWith(blocks("pause success"));
+        expect(mockRespond).toBeCalledWith("pause success");
       });
     });
 
@@ -182,10 +150,10 @@ describe("Parse Command", () => {
 
       it("should send a failure message", async () => {
         await parseCommand({
-          text: "pause",
+          command: "pause",
           respond: mockRespond,
         });
-        expect(mockRespond).toBeCalledWith(blocks("pause failure"));
+        expect(mockRespond).toBeCalledWith("pause failure");
       });
     });
   });
@@ -198,10 +166,10 @@ describe("Parse Command", () => {
 
       it("should send a success message", async () => {
         await parseCommand({
-          text: "resume",
+          command: "resume",
           respond: mockRespond,
         });
-        expect(mockRespond).toBeCalledWith(blocks("resume success"));
+        expect(mockRespond).toBeCalledWith("resume success");
       });
     });
 
@@ -212,10 +180,10 @@ describe("Parse Command", () => {
 
       it("should send a failure message", async () => {
         await parseCommand({
-          text: "resume",
+          command: "resume",
           respond: mockRespond,
         });
-        expect(mockRespond).toBeCalledWith(blocks("resume failure"));
+        expect(mockRespond).toBeCalledWith("resume failure");
       });
     });
   });
@@ -223,11 +191,11 @@ describe("Parse Command", () => {
   describe("given the help command is sent", () => {
     it("should send the ephemeral message", async () => {
       await parseCommand({
-        text: "help",
+        command: "help",
         respond: mockRespond,
       });
 
-      expect(mockRespond).toBeCalledWith(response("help"));
+      expect(mockRespond).toBeCalledWith("help", true);
     });
   });
 });
