@@ -1,72 +1,25 @@
 import { WebClient, ChatPostMessageArguments } from "@slack/web-api";
 import fetch from "node-fetch";
+import { TeamsMessage } from "./teams";
 
 type Client = {
-  postMessage: (args: any) => Promise<any>;
-};
-
-type TeamsMessage = {
-  summary: string;
-  assignees: string;
-  modified: Date;
-  uri: string;
+  postMessage: (args: TeamsMessage | ChatPostMessageArguments) => Promise<void>;
 };
 
 const postSlackMessage =
-  (client: WebClient) => (args: ChatPostMessageArguments) =>
-    client.chat.postMessage(args);
+  (client: WebClient) => async (args: ChatPostMessageArguments) => {
+    await client.chat.postMessage(args);
+  };
 
-const createTeamsCard = ({
-  summary,
-  assignees,
-  modified,
-  uri,
-}: TeamsMessage) => ({
-  "@type": "MessageCard",
-  "@context": "http://schema.org/extensions",
-  themeColor: "0076D7",
-  summary,
-  sections: [
-    {
-      activityTitle: summary,
-      activitySubtitle: `In ${process.env.GITHUB_REPOSITORY}`,
-      activityImage:
-        "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/mozilla/36/steam-locomotive_1f682.png",
-      facts: [
-        {
-          name: "Assigned to",
-          value: assignees,
-        },
-        {
-          name: "When",
-          value: modified.toLocaleString("en-GB"),
-        },
-      ],
-      markdown: true,
-    },
-  ],
-  potentialAction: [
-    {
-      "@type": "OpenUri",
-      name: "View this PR",
-      targets: [
-        {
-          os: "default",
-          uri,
-        },
-      ],
-    },
-  ],
-});
-
-const postTeamsMessage = (args: TeamsMessage) =>
-  fetch(process.env.TEAMS_INCOMING_WEBHOOK, {
+const postTeamsMessage = async (card: TeamsMessage) => {
+  await fetch(process.env.TEAMS_INCOMING_WEBHOOK, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(createTeamsCard(args)),
+    body: JSON.stringify(card),
   });
+};
 
 export const createClient = (): Client => {
   const isSlackClient = process.env.CLIENT_PLATFORM === "slack";
