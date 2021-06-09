@@ -22,7 +22,7 @@ describe("Create Slack Panel", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `headline:\n*<http://some.url|PR title>*`,
+              text: "headline:\n*<http://some.url|PR title>*",
             },
           },
           {
@@ -30,11 +30,11 @@ describe("Create Slack Panel", () => {
             fields: [
               {
                 type: "mrkdwn",
-                text: `*Created by:*\nme`,
+                text: "*Created by:*\nme",
               },
               {
                 type: "mrkdwn",
-                text: `*When:*\n1/29/2021, 8:00:00 PM`,
+                text: "*When:*\n1/29/2021, 8:00:00 PM",
               },
             ],
           },
@@ -56,7 +56,7 @@ describe("Create Slack Panel", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `headline:\n*<http://some.url|PR title>*`,
+              text: "headline:\n*<http://some.url|PR title>*",
             },
           },
           {
@@ -64,11 +64,11 @@ describe("Create Slack Panel", () => {
             fields: [
               {
                 type: "mrkdwn",
-                text: `*Changed by:*\nme`,
+                text: "*Changed by:*\nme",
               },
               {
                 type: "mrkdwn",
-                text: `*When:*\n1/29/2021, 8:00:00 PM`,
+                text: "*When:*\n1/29/2021, 8:00:00 PM",
               },
             ],
           },
@@ -92,7 +92,7 @@ describe("Create Slack Panel", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `headline:\n*<http://some.url|PR title>*`,
+              text: "headline:\n*<http://some.url|PR title>*",
             },
           },
           {
@@ -100,11 +100,11 @@ describe("Create Slack Panel", () => {
             fields: [
               {
                 type: "mrkdwn",
-                text: `*Created by:*\nme`,
+                text: "*Created by:*\nme",
               },
               {
                 type: "mrkdwn",
-                text: `*When:*\n1/29/2021, 8:00:00 PM`,
+                text: "*When:*\n1/29/2021, 8:00:00 PM",
               },
             ],
           },
@@ -112,7 +112,7 @@ describe("Create Slack Panel", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `The following people have been assigned: someone, else`,
+              text: "The following people have been assigned: someone, else",
             },
           },
         ]);
@@ -134,7 +134,7 @@ describe("Create Slack Panel", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `headline:\n*<http://some.url|PR title>*`,
+              text: "headline:\n*<http://some.url|PR title>*",
             },
           },
           {
@@ -142,11 +142,11 @@ describe("Create Slack Panel", () => {
             fields: [
               {
                 type: "mrkdwn",
-                text: `*Changed by:*\nme`,
+                text: "*Changed by:*\nme",
               },
               {
                 type: "mrkdwn",
-                text: `*When:*\n1/29/2021, 8:00:00 PM`,
+                text: "*When:*\n1/29/2021, 8:00:00 PM",
               },
             ],
           },
@@ -154,7 +154,7 @@ describe("Create Slack Panel", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `The following people have been assigned: someone, else`,
+              text: "The following people have been assigned: someone, else",
             },
           },
         ]);
