@@ -9,14 +9,6 @@ export interface Request extends HttpRequest {
   body: PullRequestEvent | StatusEvent;
 }
 
-export type PanelData = {
-  footer?: string;
-  headline: string;
-  pull_request: PullRequest;
-  tag: string;
-  changed?: boolean;
-};
-
 export type SlackUser = {
   id: string;
   name: string;
@@ -25,4 +17,12 @@ export type SlackUser = {
     title: string;
     display_name: string;
   };
+};
+
+export type CardProps = {
+  headline: string;
+  pullRequest: PullRequest;
+  creator?: string;
+  changed?: boolean;
+  assigned?: string[];
 };

@@ -1,19 +1,19 @@
 import { KnownBlock } from "@slack/bolt";
-import { PanelData } from "./types";
+import { CardProps } from "./types";
 
 export const createSlackPanel = ({
-  footer,
   headline,
-  pull_request,
-  tag,
+  pullRequest,
+  creator,
   changed,
-}: PanelData) => {
+  assigned,
+}: CardProps) => {
   const blocks: KnownBlock[] = [
     {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `${headline}:\n*<${pull_request.html_url}|${pull_request.title}>*`,
+        text: `${headline}:\n*<${pullRequest.html_url}|${pullRequest.title}>*`,
       },
     },
     {
@@ -21,11 +21,11 @@ export const createSlackPanel = ({
       fields: [
         {
           type: "mrkdwn",
-          text: `${changed ? "*Changed by:*" : "*Created by:*"}\n${tag}`,
+          text: `${changed ? "*Changed by:*" : "*Created by:*"}\n${creator}`,
         },
         {
           type: "mrkdwn",
-          text: `*When:*\n${new Date(pull_request.updated_at).toLocaleString(
+          text: `*When:*\n${new Date(pullRequest.updated_at).toLocaleString(
             "en-GB"
           )}`,
         },
@@ -33,12 +33,12 @@ export const createSlackPanel = ({
     },
   ];
 
-  footer &&
+  assigned &&
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: footer,
+        text: `The following people have been assigned: ${assigned.join(" ")}`,
       },
     });
 

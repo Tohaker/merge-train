@@ -1,38 +1,32 @@
-type TeamsCardProps = {
-  summary: string;
-  assigned: string;
-  modified: Date;
-  uri: string;
-};
+import { CardProps } from "./types";
 
-export type TeamsMessage = ReturnType<
-  typeof createTeamsReviewCard | typeof createTeamsMergeCard
->;
+export type TeamsMessage = ReturnType<typeof createTeamsCard>;
 
-export const createTeamsReviewCard = ({
-  summary,
-  assigned,
-  modified,
-  uri,
-}: TeamsCardProps) => ({
+export const createTeamsCard = ({ headline, pullRequest }: CardProps) => ({
   "@type": "MessageCard",
   "@context": "http://schema.org/extensions",
   themeColor: "0076D7",
-  summary,
+  summary: headline,
   sections: [
     {
-      activityTitle: summary,
+      activityTitle: headline,
       activitySubtitle: `In ${process.env.GITHUB_REPOSITORY}`,
       activityImage:
         "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/mozilla/36/steam-locomotive_1f682.png",
       facts: [
+        {
+          name: "Creator",
+          value: pullRequest.user.name,
+        },
         {
           name: "Assigned to",
-          value: assigned,
+          value: pullRequest.requested_reviewers
+            .map((user) => ("name" in user ? user.name : user.id))
+            .join(", "),
         },
         {
           name: "When",
-          value: modified.toLocaleString("en-GB"),
+          value: new Date(pullRequest.updated_at).toLocaleString("en-GB"),
         },
       ],
       markdown: true,
@@ -45,50 +39,7 @@ export const createTeamsReviewCard = ({
       targets: [
         {
           os: "default",
-          uri,
-        },
-      ],
-    },
-  ],
-});
-
-export const createTeamsMergeCard = ({
-  summary,
-  assigned,
-  modified,
-  uri,
-}: TeamsCardProps) => ({
-  "@type": "MessageCard",
-  "@context": "http://schema.org/extensions",
-  themeColor: "0076D7",
-  summary,
-  sections: [
-    {
-      activityTitle: summary,
-      activitySubtitle: `In ${process.env.GITHUB_REPOSITORY}`,
-      activityImage:
-        "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/mozilla/36/steam-locomotive_1f682.png",
-      facts: [
-        {
-          name: "Changed by",
-          value: assigned,
-        },
-        {
-          name: "When",
-          value: modified.toLocaleString("en-GB"),
-        },
-      ],
-      markdown: true,
-    },
-  ],
-  potentialAction: [
-    {
-      "@type": "OpenUri",
-      name: "View this PR",
-      targets: [
-        {
-          os: "default",
-          uri,
+          uri: pullRequest.html_url,
         },
       ],
     },

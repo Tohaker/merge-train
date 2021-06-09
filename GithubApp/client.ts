@@ -1,23 +1,33 @@
-import { WebClient, ChatPostMessageArguments } from "@slack/web-api";
+import { WebClient } from "@slack/web-api";
 import fetch from "node-fetch";
-import { TeamsMessage } from "./teams";
+import { createSlackPanel } from "./slack";
+import { createTeamsCard } from "./teams";
+import { CardProps } from "./types";
+import { icon_emoji } from "../common/config";
 
 type Client = {
-  postMessage: (args: TeamsMessage | ChatPostMessageArguments) => Promise<void>;
+  postMessage: (cardProps: CardProps, channel?: string) => Promise<void>;
 };
 
 const postSlackMessage =
-  (client: WebClient) => async (args: ChatPostMessageArguments) => {
-    await client.chat.postMessage(args);
+  (client: WebClient) => async (cardProps: CardProps, channel: string) => {
+    const slackMessage = createSlackPanel(cardProps);
+    await client.chat.postMessage({
+      icon_emoji,
+      channel,
+      blocks: slackMessage,
+      text: cardProps.headline,
+    });
   };
 
-const postTeamsMessage = async (card: TeamsMessage) => {
+const postTeamsMessage = async (card: CardProps) => {
+  const teamsMessage = createTeamsCard(card);
   await fetch(process.env.TEAMS_INCOMING_WEBHOOK, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(card),
+    body: JSON.stringify(teamsMessage),
   });
 };
 
