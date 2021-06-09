@@ -7,35 +7,12 @@ import {
   Team,
   User,
 } from "@octokit/webhooks-types";
-import { createSlackPanel } from "./slack";
 import { Request, SlackUser } from "./types";
 import { ChannelName, Label, icon_emoji } from "../common/config";
 import { handleItemAdded, handleStateReported } from "./autoMerge";
 import { checkSignature } from "../common/checkSignature";
 import { Conversation } from "../common/types";
-
-const createAssignmentText = async (
-  client: WebClient,
-  reviewers: (User | Team)[]
-) => {
-  const { members } = await client.users.list();
-
-  return reviewers
-    .reduce((acc, user) => {
-      // This gets us out of the User | Team union
-      if ("login" in user) {
-        const slackUser = (members as SlackUser[]).find(
-          (slackUser) => slackUser.profile.title === user.login
-        );
-        if (slackUser?.id) {
-          return acc + `<@${slackUser.id}> `;
-        } else {
-          return acc + `${user.login} `;
-        }
-      }
-    }, "")
-    .trim();
-};
+import { createClient } from "./client";
 
 const httpTrigger: AzureFunction = async (
   context: Context,
@@ -51,6 +28,8 @@ const httpTrigger: AzureFunction = async (
   }
 
   const slackWebClient = new WebClient(process.env.SLACK_BOT_TOKEN);
+
+  const client = createClient();
   const channels: Record<string, string> = (
     (await slackWebClient.conversations.list()) as Conversation
   ).channels.reduce(
@@ -85,19 +64,15 @@ const httpTrigger: AzureFunction = async (
         const channel = channels[ChannelName.MERGE];
         const headline = "A new PR is ready to merge";
 
-        const blocks = createSlackPanel({
-          headline,
-          pull_request,
-          tag: await createAssignmentText(slackWebClient, [sender]),
-          changed: true,
-        });
+        await client.postMessage(
+          {
+            headline,
+            pullRequest: pull_request,
+            changed: true,
+          },
+          channel
+        );
 
-        await slackWebClient.chat.postMessage({
-          icon_emoji,
-          blocks,
-          channel,
-          text: headline,
-        });
         await handleItemAdded(slackWebClient, pull_request, channel);
       }
       break;
@@ -107,19 +82,14 @@ const httpTrigger: AzureFunction = async (
         const channel = channels[ChannelName.MERGE];
         const headline = "A PR has had its status changed";
 
-        const blocks = createSlackPanel({
-          headline,
-          pull_request,
-          tag: await createAssignmentText(slackWebClient, [sender]),
-          changed: true,
-        });
-
-        await slackWebClient.chat.postMessage({
-          icon_emoji,
-          blocks,
-          channel,
-          text: headline,
-        });
+        await client.postMessage(
+          {
+            headline,
+            pullRequest: pull_request,
+            changed: true,
+          },
+          channel
+        );
       }
       break;
     }
@@ -129,23 +99,19 @@ const httpTrigger: AzureFunction = async (
       if ("requested_team" in req.body && !pull_request.draft) {
         const channel = channels[ChannelName.REVIEWS];
         const headline = "A PR has been marked for review";
-        const reviewers = await createAssignmentText(
-          slackWebClient,
+        const assigned = await client.formatAssignees(
           pull_request.requested_reviewers
         );
-        const blocks = createSlackPanel({
-          headline,
-          footer: `The following people have been assigned: ${reviewers}`,
-          pull_request,
-          tag: await createAssignmentText(slackWebClient, [sender]),
-        });
 
-        await slackWebClient.chat.postMessage({
-          icon_emoji,
-          blocks,
-          channel,
-          text: headline,
-        });
+        await client.postMessage(
+          {
+            headline,
+            pullRequest: pull_request,
+            changed: true,
+            assigned,
+          },
+          channel
+        );
       }
       break;
     }
