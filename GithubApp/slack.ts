@@ -38,7 +38,7 @@ export const createSlackPanel = ({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `The following people have been assigned: ${assigned.join(" ")}`,
+        text: `The following people have been assigned: ${assigned.join(", ")}`,
       },
     });
 
