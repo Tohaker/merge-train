@@ -2,7 +2,11 @@ import { CardProps } from "./types";
 
 export type TeamsMessage = ReturnType<typeof createTeamsCard>;
 
-export const createTeamsCard = ({ headline, pullRequest }: CardProps) => ({
+export const createTeamsCard = ({
+  headline,
+  pullRequest,
+  assigned,
+}: CardProps) => ({
   "@type": "MessageCard",
   "@context": "http://schema.org/extensions",
   themeColor: "0076D7",
@@ -20,9 +24,7 @@ export const createTeamsCard = ({ headline, pullRequest }: CardProps) => ({
         },
         {
           name: "Assigned to",
-          value: pullRequest.requested_reviewers
-            .map((user) => ("name" in user ? user.name : user.id))
-            .join(", "),
+          value: assigned.join(", "),
         },
         {
           name: "When",
