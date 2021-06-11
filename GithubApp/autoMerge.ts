@@ -1,4 +1,3 @@
-import { WebClient } from "@slack/web-api";
 import { PullRequest, StatusEvent } from "@octokit/webhooks-types";
 import { Label as PullRequestLabel, Commit } from "@octokit/graphql-schema";
 import {
@@ -6,9 +5,8 @@ import {
   getItems,
   getMergeableItemsState,
   isMergeable,
-  MergeableItemState,
 } from "../graphql/queue";
-import { Branch, Label, icon_emoji, mergeMethods } from "../common/config";
+import { Branch, Label, mergeMethods } from "../common/config";
 import {
   addLabelToPullRequest,
   getCommitStatus,
@@ -17,7 +15,8 @@ import {
   Queue,
 } from "../graphql";
 import { graphql } from "@octokit/graphql/dist-types/types";
-import { KnownBlock } from "@slack/types";
+import { Client } from "./types";
+import { formatLink } from "./client";
 
 const getLabels = (queue: Queue): PullRequestLabel[] =>
   queue.repository.pullRequests.nodes?.reduce(
@@ -44,7 +43,7 @@ const mergePR = async (
 };
 
 export const handleItemAdded = async (
-  client: WebClient,
+  client: Client,
   pullRequest: PullRequest,
   channel: string
 ) => {
@@ -94,64 +93,19 @@ export const handleItemAdded = async (
       const shouldMerge = process.env.MERGE_ENABLED === "true";
       shouldMerge && (await mergePR(graphqlClient, id, branch));
     } else {
-      await client.chat.postMessage({
-        icon_emoji,
-        text: `<${pullRequest.html_url}|${pullRequest.title}> cannot be merged yet, remove the label until this is resolved.`,
-        channel,
-      });
+      await client.postSimpleMessage(
+        `${formatLink({
+          text: pullRequest.title,
+          url: pullRequest.html_url,
+        })} cannot be merged yet, remove the label until this is resolved.`,
+        channel
+      );
     }
   }
 };
 
-const createBlocks = (states: MergeableItemState[]) => {
-  let text = "*No Pull Requests are ready to merge*";
-  if (states.length) text += "\nReview their statuses below";
-
-  const blocks: KnownBlock[] = [
-    {
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text,
-      },
-    },
-  ];
-
-  if (states.length)
-    blocks.push({
-      type: "divider",
-    });
-  else return blocks;
-
-  const sections = states.reduce((acc, state) => {
-    const link = `<${state.url}|${state.title}>`;
-    const element = `Mergeable: \`${state.mergeable}\`\nHead Commit State: \`${
-      state.headCommitState
-    }\`\nLabels: ${state.appliedLabels.map((l) => `\`${l}\``).join(", ")}`;
-
-    const section = {
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: link,
-      },
-    };
-
-    const context = {
-      type: "context",
-      elements: [{ type: "mrkdown", text: element }],
-    };
-
-    return acc.concat(section, context);
-  }, []);
-
-  blocks.push(...sections, { type: "divider" });
-
-  return blocks;
-};
-
 export const handleStateReported = async (
-  client: WebClient,
+  client: Client,
   body: StatusEvent,
   channel: string
 ) => {
@@ -177,12 +131,11 @@ export const handleStateReported = async (
       const shouldMerge = process.env.MERGE_ENABLED === "true";
       shouldMerge && (await mergePR(graphqlClient, id, headRefName));
     } else if (!isPaused(labels)) {
-      await client.chat.postMessage({
-        icon_emoji,
-        blocks: createBlocks(mergeableItemsState),
-        text: "No PRs left to merge.",
-        channel,
-      });
+      await client.postMergeMessage(
+        mergeableItemsState,
+        "No PRs left to merge.",
+        channel
+      );
     }
   }
 };
