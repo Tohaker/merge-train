@@ -1,14 +1,20 @@
 import { WebClient } from "@slack/web-api";
 import fetch from "node-fetch";
-import { createSlackPanel } from "./slack";
-import { createTeamsCard } from "./teams";
-import { CardProps, SlackUser } from "./types";
+import { createSlackMergePanel, createSlackReviewPanel } from "./slack";
+import { createTeamsMergeCard, createTeamsReviewCard } from "./teams";
+import { CardProps, SlackUser, Client } from "./types";
 import { icon_emoji } from "../common/config";
 import { Team, User } from "@octokit/webhooks-types";
+import { MergeableItemState } from "../graphql/queue";
 
-type Client = {
-  postMessage: (cardProps: CardProps, channel?: string) => Promise<void>;
-  formatAssignees: (reviewers: (User | Team)[]) => Promise<string[]>;
+export const formatLink = ({ text, url }) => {
+  const isSlackClient = process.env.CLIENT_PLATFORM === "slack";
+
+  if (isSlackClient) {
+    return `<${url}|${text}>`;
+  } else {
+    return `[${text}](${url})`;
+  }
 };
 
 const formatSlackAssignees =
@@ -36,9 +42,9 @@ const formatTeamsAssignees = (reviewers: (User | Team)[]) => {
   );
 };
 
-const postSlackMessage =
+const postSlackReviewMessage =
   (client: WebClient) => async (cardProps: CardProps, channel: string) => {
-    const slackMessage = createSlackPanel(cardProps);
+    const slackMessage = createSlackReviewPanel(cardProps);
     await client.chat.postMessage({
       icon_emoji,
       channel,
@@ -47,8 +53,29 @@ const postSlackMessage =
     });
   };
 
-const postTeamsMessage = async (card: CardProps) => {
-  const teamsMessage = createTeamsCard(card);
+const postSlackMergeMessage =
+  (client: WebClient) =>
+  async (states: MergeableItemState[], summary: string, channel: string) => {
+    const slackMessage = createSlackMergePanel(states);
+    await client.chat.postMessage({
+      icon_emoji,
+      channel,
+      blocks: slackMessage,
+      text: summary,
+    });
+  };
+
+const postSlackSimpleMessage =
+  (client: WebClient) => async (text: string, channel: string) => {
+    await client.chat.postMessage({
+      icon_emoji,
+      channel,
+      text,
+    });
+  };
+
+const postTeamsReviewMessage = async (card: CardProps) => {
+  const teamsMessage = createTeamsReviewCard(card);
   await fetch(process.env.TEAMS_INCOMING_WEBHOOK, {
     method: "POST",
     headers: {
@@ -58,18 +85,43 @@ const postTeamsMessage = async (card: CardProps) => {
   });
 };
 
+const postTeamsMergeMessage = async (states: MergeableItemState[]) => {
+  const teamsMessage = createTeamsMergeCard(states);
+  await fetch(process.env.TEAMS_INCOMING_WEBHOOK, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(teamsMessage),
+  });
+};
+
+const postTeamsSimpleMessage = async (text: string) => {
+  await fetch(process.env.TEAMS_INCOMING_WEBHOOK, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text }),
+  });
+};
+
 export const createClient = (): Client => {
   const isSlackClient = process.env.CLIENT_PLATFORM === "slack";
 
   if (isSlackClient) {
     const client = new WebClient(process.env.SLACK_BOT_TOKEN);
     return {
-      postMessage: postSlackMessage(client),
+      postReviewMessage: postSlackReviewMessage(client),
+      postMergeMessage: postSlackMergeMessage(client),
+      postSimpleMessage: postSlackSimpleMessage(client),
       formatAssignees: formatSlackAssignees(client),
     };
   } else {
     return {
-      postMessage: postTeamsMessage,
+      postReviewMessage: postTeamsReviewMessage,
+      postMergeMessage: postTeamsMergeMessage,
+      postSimpleMessage: postTeamsSimpleMessage,
       formatAssignees: formatTeamsAssignees,
     };
   }
