@@ -4,11 +4,9 @@ import {
   PullRequestEvent,
   PullRequestLabeledEvent,
   StatusEvent,
-  Team,
-  User,
 } from "@octokit/webhooks-types";
-import { Request, SlackUser } from "./types";
-import { ChannelName, Label, icon_emoji } from "../common/config";
+import { Request } from "./types";
+import { ChannelName, Label } from "../common/config";
 import { handleItemAdded, handleStateReported } from "./autoMerge";
 import { checkSignature } from "../common/checkSignature";
 import { Conversation } from "../common/types";
@@ -28,8 +26,8 @@ const httpTrigger: AzureFunction = async (
   }
 
   const slackWebClient = new WebClient(process.env.SLACK_BOT_TOKEN);
-
   const client = createClient();
+
   const channels: Record<string, string> = (
     (await slackWebClient.conversations.list()) as Conversation
   ).channels.reduce(
@@ -39,7 +37,6 @@ const httpTrigger: AzureFunction = async (
 
   context.log(JSON.stringify(req.body));
 
-  const { sender } = req.body;
   const { action, pull_request } = req.body as PullRequestEvent;
   const { label } = req.body as PullRequestLabeledEvent;
   const { state } = req.body as StatusEvent;
@@ -47,7 +44,7 @@ const httpTrigger: AzureFunction = async (
   // A merge was successful, so we can try to merge the next one.
   if (state === "success") {
     handleStateReported(
-      slackWebClient,
+      client,
       req.body as StatusEvent,
       channels[ChannelName.MERGE]
     );
@@ -64,7 +61,7 @@ const httpTrigger: AzureFunction = async (
         const channel = channels[ChannelName.MERGE];
         const headline = "A new PR is ready to merge";
 
-        await client.postMessage(
+        await client.postReviewMessage(
           {
             headline,
             pullRequest: pull_request,
@@ -73,7 +70,7 @@ const httpTrigger: AzureFunction = async (
           channel
         );
 
-        await handleItemAdded(slackWebClient, pull_request, channel);
+        await handleItemAdded(client, pull_request, channel);
       }
       break;
     }
@@ -82,7 +79,7 @@ const httpTrigger: AzureFunction = async (
         const channel = channels[ChannelName.MERGE];
         const headline = "A PR has had its status changed";
 
-        await client.postMessage(
+        await client.postReviewMessage(
           {
             headline,
             pullRequest: pull_request,
@@ -103,7 +100,7 @@ const httpTrigger: AzureFunction = async (
           pull_request.requested_reviewers
         );
 
-        await client.postMessage(
+        await client.postReviewMessage(
           {
             headline,
             pullRequest: pull_request,
