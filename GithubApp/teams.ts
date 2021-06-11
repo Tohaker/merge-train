@@ -1,8 +1,10 @@
+import { MergeableItemState } from "../graphql/queue";
+import { formatLink } from "./client";
 import { CardProps } from "./types";
 
-export type TeamsMessage = ReturnType<typeof createTeamsCard>;
+export type TeamsMessage = ReturnType<typeof createTeamsReviewCard>;
 
-export const createTeamsCard = ({
+export const createTeamsReviewCard = ({
   headline,
   pullRequest,
   assigned,
@@ -47,3 +49,53 @@ export const createTeamsCard = ({
     },
   ],
 });
+
+export const createTeamsMergeCard = (states: MergeableItemState[]) => {
+  const text = "No Pull Requests are ready to merge";
+  const subtitle = "Review their statuses below";
+
+  if (!states.length) {
+    return { text };
+  }
+
+  const sections = states.map((state) => {
+    const link = formatLink({
+      text: state.title,
+      url: state.url,
+    });
+
+    return {
+      title: link,
+      facts: [
+        {
+          name: "Mergeable",
+          value: state.mergeable,
+        },
+        {
+          name: "Head Commit State",
+          value: state.headCommitState,
+        },
+        {
+          name: "Labels",
+          value: state.appliedLabels.map((l) => `\`${l}\``).join(", "),
+        },
+      ],
+    };
+  }, []);
+
+  return {
+    "@type": "MessageCard",
+    "@context": "http://schema.org/extensions",
+    themeColor: "0076D7",
+    summary: text,
+    sections: [
+      {
+        activityTitle: text,
+        activitySubtitle: subtitle,
+        activityImage:
+          "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/mozilla/36/steam-locomotive_1f682.png",
+      },
+      ...sections,
+    ],
+  };
+};
