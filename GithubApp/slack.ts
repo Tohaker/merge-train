@@ -15,7 +15,10 @@ export const createSlackReviewPanel = ({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `${headline}:\n*<${pullRequest.html_url}|${pullRequest.title}>*`,
+        text: `${headline}:\n*${formatLink({
+          text: pullRequest.title,
+          url: pullRequest.html_url,
+        })}*`,
       },
     },
     {
@@ -86,7 +89,7 @@ export const createSlackMergePanel = (states: MergeableItemState[]) => {
 
     const context = {
       type: "context",
-      elements: [{ type: "mrkdown", text: element }],
+      elements: [{ type: "mrkdwn", text: element }],
     };
 
     return acc.concat(section, context);
