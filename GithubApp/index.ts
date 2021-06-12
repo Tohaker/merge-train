@@ -12,6 +12,27 @@ import { checkSignature } from "../common/checkSignature";
 import { Conversation } from "../common/types";
 import { createClient } from "./client";
 
+const findChannels = async () => {
+  if (process.env.CLIENT_PLATFORM === "slack") {
+    const slackWebClient = new WebClient(process.env.SLACK_BOT_TOKEN);
+
+    const channels: Record<string, string> = (
+      (await slackWebClient.conversations.list()) as Conversation
+    ).channels.reduce(
+      (acc, channel) => ((acc[channel.name] = channel.id), acc),
+      {}
+    );
+
+    return channels;
+  } else {
+    // Slack channels won't work elsewhere, so just return a default blank key for channels
+    return Object.values(ChannelName).reduce(
+      (acc, key) => ((acc[key] = ""), acc),
+      {}
+    );
+  }
+};
+
 const httpTrigger: AzureFunction = async (
   context: Context,
   req: Request
@@ -25,15 +46,8 @@ const httpTrigger: AzureFunction = async (
     return;
   }
 
-  const slackWebClient = new WebClient(process.env.SLACK_BOT_TOKEN);
   const client = createClient();
-
-  const channels: Record<string, string> = (
-    (await slackWebClient.conversations.list()) as Conversation
-  ).channels.reduce(
-    (acc, channel) => ((acc[channel.name] = channel.id), acc),
-    {}
-  );
+  const channels = await findChannels();
 
   context.log(JSON.stringify(req.body));
 

@@ -89,7 +89,6 @@ resource "azurerm_function_app" "teams_function" {
     HASH                           = base64encode(filesha256(var.function))
     WEBSITE_RUN_FROM_PACKAGE       = "https://${azurerm_storage_account.storage.name}.blob.core.windows.net/${azurerm_storage_container.deployments.name}/${azurerm_storage_blob.function_code.name}${data.azurerm_storage_account_sas.sas.sas}"
     APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.insights.instrumentation_key
-    SLACK_BOT_TOKEN                = var.slack_bot_token
     TEAMS_TOKEN                    = var.teams_token
     GHAPP_SECRET                   = var.github_signature
     GITHUB_HOSTNAME                = var.github_hostname

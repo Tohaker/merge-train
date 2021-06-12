@@ -1,17 +1,31 @@
 import { WebClient } from "@slack/web-api";
 import { createClient } from "./client";
+import { Label } from "../common/config";
+import { handleItemAdded, handleStateReported } from "./autoMerge";
+import { checkSignature } from "../common/checkSignature";
+import httpTrigger from ".";
+import { Context } from "@azure/functions";
 
 jest.mock("@slack/web-api");
 jest.mock("./client");
+jest.mock("./autoMerge");
+jest.mock("../common/checkSignature");
 
 const mockWebClient = WebClient as jest.MockedClass<typeof WebClient>;
 const mockCreateClient = createClient as jest.MockedFunction<
   typeof createClient
 >;
+const mockHandleItemAdded = handleItemAdded as jest.MockedFunction<
+  typeof handleItemAdded
+>;
+const mockHandleStateReported = handleStateReported as jest.MockedFunction<
+  typeof handleStateReported
+>;
+const mockCheckSignature = checkSignature as jest.MockedFunction<
+  typeof checkSignature
+>;
 
 describe("HTTP Trigger", () => {
-  let httpTrigger;
-
   const mockClient = {
     postReviewMessage: jest.fn(),
     postSimpleMessage: jest.fn(),
@@ -20,8 +34,6 @@ describe("HTTP Trigger", () => {
   };
 
   mockCreateClient.mockReturnValue(mockClient);
-
-  const mockCheckSignature = jest.fn();
 
   const mockListConversations = jest.fn(() => ({
     channels: [
@@ -33,8 +45,6 @@ describe("HTTP Trigger", () => {
       { name: "qa", id: "0987" },
     ],
   }));
-  const mockGetMergeableItems = jest.fn();
-  const mockGetQueue = jest.fn();
 
   const webClient = {
     conversations: {
@@ -45,13 +55,11 @@ describe("HTTP Trigger", () => {
   //@ts-ignore
   mockWebClient.mockImplementation(() => webClient);
 
-  const mockHandleItemAdded = jest.fn();
-  const mockHandleStateReported = jest.fn();
-
   const mockContext = {
     log: jest.fn(),
     done: jest.fn(),
-  };
+  } as unknown as Context;
+
   const mockRequest = {
     body: {
       action: "",
@@ -81,35 +89,10 @@ describe("HTTP Trigger", () => {
       },
     },
   };
-  enum ChannelName {
-    MERGE = "merge",
-    REVIEWS = "reviews",
-  }
-
-  enum Label {
-    READY_FOR_MERGE = "ready for merge",
-  }
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.mock("../common/checkSignature", () => ({
-      checkSignature: mockCheckSignature,
-    }));
-    jest.mock("../common/config", () => ({
-      ChannelName,
-      Label,
-      icon_emoji: "emoji",
-    }));
-    jest.mock("./autoMerge", () => ({
-      handleItemAdded: mockHandleItemAdded,
-      handleStateReported: mockHandleStateReported,
-    }));
-    jest.mock("../graphql/queue", () => ({
-      getMergeableItems: mockGetMergeableItems,
-      getQueue: mockGetQueue,
-    }));
-
-    httpTrigger = require(".").default;
+    process.env.CLIENT_PLATFORM = "slack";
   });
 
   describe("given checkSignature fails", () => {
@@ -175,7 +158,7 @@ describe("HTTP Trigger", () => {
 
       describe("given the label name is ready for merge", () => {
         beforeEach(() => {
-          mockRequest.body.label.name = "ready for merge";
+          mockRequest.body.label.name = Label.READY_FOR_MERGE;
         });
 
         it("should post a message", async () => {
@@ -189,6 +172,37 @@ describe("HTTP Trigger", () => {
             },
             "1234"
           );
+
+          expect(mockHandleItemAdded).toBeCalledWith(
+            mockClient,
+            mockRequest.body.pull_request,
+            "1234"
+          );
+        });
+
+        describe("given the client is teams", () => {
+          beforeEach(() => {
+            process.env.CLIENT_PLATFORM = "teams";
+          });
+
+          it("should post a message without a channel", async () => {
+            await httpTrigger(mockContext, mockRequest);
+
+            expect(mockClient.postReviewMessage).toBeCalledWith(
+              {
+                headline: "A new PR is ready to merge",
+                pullRequest: mockRequest.body.pull_request,
+                changed: true,
+              },
+              ""
+            );
+
+            expect(mockHandleItemAdded).toBeCalledWith(
+              mockClient,
+              mockRequest.body.pull_request,
+              ""
+            );
+          });
         });
       });
 
@@ -212,7 +226,7 @@ describe("HTTP Trigger", () => {
 
       describe("given the label name is ready for merge", () => {
         beforeEach(() => {
-          mockRequest.body.label.name = "ready for merge";
+          mockRequest.body.label.name = Label.READY_FOR_MERGE;
         });
 
         it("should post a message", async () => {
@@ -226,6 +240,25 @@ describe("HTTP Trigger", () => {
             },
             "1234"
           );
+        });
+
+        describe("given the client is teams", () => {
+          beforeEach(() => {
+            process.env.CLIENT_PLATFORM = "teams";
+          });
+
+          it("should post a message without a channel", async () => {
+            await httpTrigger(mockContext, mockRequest);
+
+            expect(mockClient.postReviewMessage).toBeCalledWith(
+              {
+                headline: "A PR has had its status changed",
+                pullRequest: mockRequest.body.pull_request,
+                changed: true,
+              },
+              ""
+            );
+          });
         });
       });
 
@@ -290,6 +323,30 @@ describe("HTTP Trigger", () => {
               "4567"
             );
             delete mockRequest.body["requested_team"];
+          });
+
+          describe("given the client is teams", () => {
+            beforeEach(() => {
+              process.env.CLIENT_PLATFORM = "teams";
+            });
+
+            it("should post a message without a channel", async () => {
+              mockClient.formatAssignees.mockResolvedValue([{ data: true }]);
+              mockRequest.body["requested_team"] = { name: "some team" };
+
+              await httpTrigger(mockContext, mockRequest);
+
+              expect(mockClient.postReviewMessage).toBeCalledWith(
+                {
+                  headline: "A PR has been marked for review",
+                  pullRequest: mockRequest.body.pull_request,
+                  changed: true,
+                  assigned: [{ data: true }],
+                },
+                ""
+              );
+              delete mockRequest.body["requested_team"];
+            });
           });
         });
       }
