@@ -6,9 +6,9 @@
     "prebuild:zip": "mkdirp --mode=0700 build",
     "build:zip": "jszip-cli -c functionzip.json",
     "build": "tsc",
-    "copy:slackbot": "cpy 'SlackBot/function.json' 'dist/SlackBot'",
+    "copy:mergeclient": "cpy 'MergeClient/function.json' 'dist/MergeClient'",
     "copy:githubapp": "cpy 'GithubApp/function.json' 'dist/GithubApp'",
-    "postbuild": "npm run copy:slackbot && npm run copy:githubapp",
+    "postbuild": "npm run copy:mergeclient && npm run copy:githubapp",
     "watch": "tsc -w",
     "prestart": "npm run build",
     "start": "func start --script-root dist",
@@ -20,13 +20,15 @@
     "@octokit/auth": "^3.0.3",
     "@octokit/graphql": "^4.6.1",
     "@slack/bolt": "^3.3.0",
-    "bolt-azure-functions-receiver": "^0.0.4"
+    "bolt-azure-functions-receiver": "^0.0.4",
+    "node-fetch": "^2.6.1"
   },
   "devDependencies": {
     "@ffflorian/jszip-cli": "^3.1.0",
     "@octokit/graphql-schema": "^10.38.0",
     "@octokit/webhooks": "^9.6.0",
     "@types/jest": "^26.0.23",
+    "@types/node-fetch": "^2.5.10",
     "azure-functions-core-tools": "^3.0.0",
     "cpy-cli": "^3.1.1",
     "jest": "^26.6.3",

@@ -1,14 +1,14 @@
 import { Context, HttpRequest } from "@azure/functions";
 import { App } from "@slack/bolt";
 import { AzureFunctionsReceiver } from "bolt-azure-functions-receiver";
-import httpTrigger from ".";
+import { slackTrigger, teamsTrigger } from ".";
 
 jest.mock("@slack/bolt");
 jest.mock("bolt-azure-functions-receiver");
 
 const appMock = App as jest.MockedClass<typeof App>;
 
-describe("HTTP Trigger", () => {
+describe("Slack Trigger", () => {
   const mockContext: Context = {
     //@ts-ignore
     log: jest.fn(),
@@ -30,7 +30,7 @@ describe("HTTP Trigger", () => {
       process.env.SLACK_SIGNING_SECRET = "signing secret";
       process.env.SLACK_BOT_TOKEN = "bot token";
 
-      await httpTrigger(mockContext, mockRequest);
+      await slackTrigger(mockContext, mockRequest);
     });
 
     it("should create a new Slack App listener", () => {

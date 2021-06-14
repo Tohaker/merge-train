@@ -1,6 +1,14 @@
 import { getQueue } from "../graphql/queue";
 import sortByDate from "../graphql/sortByDate";
 
+const formatLink = (url: string, text: string) => {
+  if (process.env.CLIENT_PLATFORM === "slack") {
+    return `<${url}|${text}>`;
+  } else {
+    return `[${text}](${url})`;
+  }
+};
+
 export const getList = async (): Promise<string[]> => {
   try {
     const data = await getQueue();
@@ -8,8 +16,7 @@ export const getList = async (): Promise<string[]> => {
     const labeledEvents = sortByDate(data.repository.pullRequests.nodes);
 
     const formattedList = labeledEvents.reduce((acc, event) => {
-      const line = `<${event.url}|${event.title}>`;
-      return acc.concat(line);
+      return acc.concat(formatLink(event.url, event.title));
     }, []);
 
     return formattedList;

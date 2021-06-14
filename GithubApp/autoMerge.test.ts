@@ -1,4 +1,3 @@
-import { WebClient } from "@slack/web-api";
 import { PullRequest, StatusEvent } from "@octokit/webhooks-types";
 import {
   getItems,
@@ -13,6 +12,7 @@ import {
   createClient,
 } from "../graphql";
 import { handleItemAdded, handleStateReported } from "./autoMerge";
+import { formatLink } from "./client";
 
 jest.mock("../graphql/queue");
 jest.mock("../graphql");
@@ -20,7 +20,6 @@ jest.mock("../common/config", () => ({
   Branch: {
     DEFAULT: "master",
   },
-  icon_emoji: "emoji",
   Label: {
     MERGE_TRAIN_PAUSED: "merge train paused",
   },
@@ -35,6 +34,7 @@ jest.mock("../common/config", () => ({
     },
   ],
 }));
+jest.mock("./client");
 
 const mockGetQueue = getQueue as jest.MockedFunction<typeof getQueue>;
 const mockGetItems = getItems as jest.MockedFunction<typeof getItems>;
@@ -44,15 +44,18 @@ const mockIsMergeable = isMergeable as jest.MockedFunction<typeof isMergeable>;
 const mockCreateClient = createClient as jest.MockedFunction<
   typeof createClient
 >;
-
-const mockWebClient: WebClient = {
-  //@ts-ignore
-  chat: {
-    postMessage: jest.fn(),
-  },
-};
+const mockFormatLink = formatLink as jest.MockedFunction<typeof formatLink>;
 
 const mockClient = jest.fn();
+
+const mockPlatformClient = {
+  postSimpleMessage: jest.fn(),
+  postMergeMessage: jest.fn(),
+  postReviewMessage: jest.fn(),
+  formatAssignees: jest.fn(),
+};
+
+jest.spyOn(console, "log").mockImplementation(jest.fn());
 
 beforeEach(() => {
   //@ts-ignore
@@ -95,8 +98,8 @@ describe("handleItemAdded", () => {
     });
 
     it("should not post any message", async () => {
-      await handleItemAdded(mockWebClient, mockPR, "channel");
-      expect(mockWebClient.chat.postMessage).not.toBeCalled();
+      await handleItemAdded(mockPlatformClient, mockPR, "channel");
+      expect(mockPlatformClient.postSimpleMessage).not.toBeCalled();
     });
 
     describe("given any item in the queue has a paused label", () => {
@@ -127,7 +130,7 @@ describe("handleItemAdded", () => {
       });
 
       it("should add a label to the pull request", async () => {
-        await handleItemAdded(mockWebClient, mockPR, "channel");
+        await handleItemAdded(mockPlatformClient, mockPR, "channel");
 
         expect(mockClient).toBeCalledWith(addLabelToPullRequest, {
           labelId: "456",
@@ -161,7 +164,7 @@ describe("handleItemAdded", () => {
       });
 
       it("should not add a label to the pull request", async () => {
-        await handleItemAdded(mockWebClient, mockPR, "channel");
+        await handleItemAdded(mockPlatformClient, mockPR, "channel");
 
         expect(mockClient).not.toBeCalled();
       });
@@ -214,7 +217,7 @@ describe("handleItemAdded", () => {
       });
 
       it("should do nothing", async () => {
-        await handleItemAdded(mockWebClient, mockPR, "channel");
+        await handleItemAdded(mockPlatformClient, mockPR, "channel");
 
         expect(mockClient).not.toBeCalledWith(getCommitStatus, {
           commitRef: "https://commit.url",
@@ -223,7 +226,7 @@ describe("handleItemAdded", () => {
           prId: "nodeid123",
           mergeMethod: "REBASE",
         });
-        expect(mockWebClient.chat.postMessage).not.toBeCalled();
+        expect(mockPlatformClient.postSimpleMessage).not.toBeCalled();
       });
     });
 
@@ -270,7 +273,7 @@ describe("handleItemAdded", () => {
 
           describe('given the head ref starts with "release/"', () => {
             it("should rebase the pull request", async () => {
-              await handleItemAdded(mockWebClient, mockPR, "channel");
+              await handleItemAdded(mockPlatformClient, mockPR, "channel");
 
               expect(mockClient).toBeCalledWith(getCommitStatus, {
                 commitRef: "https://commit.url",
@@ -279,7 +282,7 @@ describe("handleItemAdded", () => {
                 prId: "nodeid123",
                 mergeMethod: "REBASE",
               });
-              expect(mockWebClient.chat.postMessage).not.toBeCalled();
+              expect(mockPlatformClient.postSimpleMessage).not.toBeCalled();
             });
           });
 
@@ -289,7 +292,7 @@ describe("handleItemAdded", () => {
             });
 
             it("should squash merge the pull request", async () => {
-              await handleItemAdded(mockWebClient, mockPR, "channel");
+              await handleItemAdded(mockPlatformClient, mockPR, "channel");
 
               expect(mockClient).toBeCalledWith(getCommitStatus, {
                 commitRef: "https://commit.url",
@@ -298,7 +301,7 @@ describe("handleItemAdded", () => {
                 prId: "nodeid123",
                 mergeMethod: "SQUASH",
               });
-              expect(mockWebClient.chat.postMessage).not.toBeCalled();
+              expect(mockPlatformClient.postSimpleMessage).not.toBeCalled();
             });
           });
         });
@@ -306,15 +309,15 @@ describe("handleItemAdded", () => {
         describe("given the pr is not mergeable", () => {
           beforeEach(() => {
             mockPR.mergeable = false;
+            mockFormatLink.mockReturnValue("<mockUrl|PR>");
           });
 
           it("should post a message", async () => {
-            await handleItemAdded(mockWebClient, mockPR, "channel");
-            expect(mockWebClient.chat.postMessage).toBeCalledWith({
-              icon_emoji: "emoji",
-              text: "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
-              channel: "channel",
-            });
+            await handleItemAdded(mockPlatformClient, mockPR, "channel");
+            expect(mockPlatformClient.postSimpleMessage).toBeCalledWith(
+              "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
+              "channel"
+            );
           });
         });
       });
@@ -327,12 +330,12 @@ describe("handleItemAdded", () => {
         });
 
         it("should not post a message", async () => {
-          await handleItemAdded(mockWebClient, mockPR, "channel");
+          await handleItemAdded(mockPlatformClient, mockPR, "channel");
 
           expect(mockClient).toBeCalledWith(getCommitStatus, {
             commitRef: "https://commit.url",
           });
-          expect(mockWebClient.chat.postMessage).not.toBeCalled();
+          expect(mockPlatformClient.postSimpleMessage).not.toBeCalled();
         });
       });
     });
@@ -380,7 +383,7 @@ describe("handleItemAdded", () => {
 
           describe('given the head ref starts with "release/"', () => {
             it("should not rebase the pull request", async () => {
-              await handleItemAdded(mockWebClient, mockPR, "channel");
+              await handleItemAdded(mockPlatformClient, mockPR, "channel");
 
               expect(mockClient).toBeCalledWith(getCommitStatus, {
                 commitRef: "https://commit.url",
@@ -389,7 +392,7 @@ describe("handleItemAdded", () => {
                 prId: "nodeid123",
                 mergeMethod: "REBASE",
               });
-              expect(mockWebClient.chat.postMessage).not.toBeCalled();
+              expect(mockPlatformClient.postSimpleMessage).not.toBeCalled();
             });
           });
 
@@ -399,7 +402,7 @@ describe("handleItemAdded", () => {
             });
 
             it("should not squash merge the pull request", async () => {
-              await handleItemAdded(mockWebClient, mockPR, "channel");
+              await handleItemAdded(mockPlatformClient, mockPR, "channel");
 
               expect(mockClient).toBeCalledWith(getCommitStatus, {
                 commitRef: "https://commit.url",
@@ -408,7 +411,7 @@ describe("handleItemAdded", () => {
                 prId: "nodeid123",
                 mergeMethod: "SQUASH",
               });
-              expect(mockWebClient.chat.postMessage).not.toBeCalled();
+              expect(mockPlatformClient.postSimpleMessage).not.toBeCalled();
             });
           });
         });
@@ -416,15 +419,15 @@ describe("handleItemAdded", () => {
         describe("given the pr is not mergeable", () => {
           beforeEach(() => {
             mockPR.mergeable = false;
+            mockFormatLink.mockReturnValue("<mockUrl|PR>");
           });
 
           it("should post a message", async () => {
-            await handleItemAdded(mockWebClient, mockPR, "channel");
-            expect(mockWebClient.chat.postMessage).toBeCalledWith({
-              icon_emoji: "emoji",
-              text: "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
-              channel: "channel",
-            });
+            await handleItemAdded(mockPlatformClient, mockPR, "channel");
+            expect(mockPlatformClient.postSimpleMessage).toBeCalledWith(
+              "<mockUrl|PR> cannot be merged yet, remove the label until this is resolved.",
+              "channel"
+            );
           });
         });
       });
@@ -437,12 +440,12 @@ describe("handleItemAdded", () => {
         });
 
         it("should not post a message", async () => {
-          await handleItemAdded(mockWebClient, mockPR, "channel");
+          await handleItemAdded(mockPlatformClient, mockPR, "channel");
 
           expect(mockClient).toBeCalledWith(getCommitStatus, {
             commitRef: "https://commit.url",
           });
-          expect(mockWebClient.chat.postMessage).not.toBeCalled();
+          expect(mockPlatformClient.postSimpleMessage).not.toBeCalled();
         });
       });
     });
@@ -477,10 +480,10 @@ describe("handleStateReported", () => {
     });
 
     it("should do nothing", async () => {
-      await handleStateReported(mockWebClient, mockBody, "1234");
+      await handleStateReported(mockPlatformClient, mockBody, "1234");
 
       expect(mockGetMergeableItemsState).not.toBeCalled();
-      expect(mockWebClient.chat.postMessage).not.toBeCalled();
+      expect(mockPlatformClient.postMergeMessage).not.toBeCalled();
     });
   });
 
@@ -508,13 +511,13 @@ describe("handleStateReported", () => {
         });
 
         it("should merge the pull request", async () => {
-          await handleStateReported(mockWebClient, mockBody, "1234");
+          await handleStateReported(mockPlatformClient, mockBody, "1234");
 
           expect(mockClient).toBeCalledWith(mergePullRequest, {
             prId: "nodeId",
             mergeMethod: "REBASE",
           });
-          expect(mockWebClient.chat.postMessage).not.toBeCalled();
+          expect(mockPlatformClient.postMergeMessage).not.toBeCalled();
         });
       });
 
@@ -540,13 +543,13 @@ describe("handleStateReported", () => {
         });
 
         it("should merge the pull request", async () => {
-          await handleStateReported(mockWebClient, mockBody, "1234");
+          await handleStateReported(mockPlatformClient, mockBody, "1234");
 
           expect(mockClient).toBeCalledWith(mergePullRequest, {
             prId: "nodeId2",
             mergeMethod: "SQUASH",
           });
-          expect(mockWebClient.chat.postMessage).not.toBeCalled();
+          expect(mockPlatformClient.postMergeMessage).not.toBeCalled();
         });
       });
     });
@@ -604,61 +607,29 @@ describe("handleStateReported", () => {
         });
 
         it("should post a message", async () => {
-          await handleStateReported(mockWebClient, mockBody, "1234");
+          await handleStateReported(mockPlatformClient, mockBody, "1234");
 
-          expect(mockWebClient.chat.postMessage).toBeCalledWith({
-            icon_emoji: "emoji",
-            blocks: [
+          expect(mockPlatformClient.postMergeMessage).toBeCalledWith(
+            [
               {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: "*No Pull Requests are ready to merge*\nReview their statuses below",
-                },
+                appliedLabels: ["Ready for merge"],
+                headCommitState: "SUCCESS",
+                mergeable: "CONFLICTING",
+                title: "title",
+                url: "https://some.url",
               },
               {
-                type: "divider",
-              },
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: "<https://some.url|title>",
-                },
-              },
-              {
-                type: "context",
-                elements: [
-                  {
-                    type: "mrkdown",
-                    text: "Mergeable: `CONFLICTING`\nHead Commit State: `SUCCESS`\nLabels: `Ready for merge`",
-                  },
-                ],
-              },
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: "<https://some2.url|title2>",
-                },
-              },
-              {
-                type: "context",
-                elements: [
-                  {
-                    type: "mrkdown",
-                    text: "Mergeable: `UNKNOWN`\nHead Commit State: `FAILURE`\nLabels: `Ready for merge`, `merge train paused`",
-                  },
-                ],
-              },
-              {
-                type: "divider",
+                appliedLabels: ["Ready for merge", "merge train paused"],
+                headCommitState: "FAILURE",
+                mergeable: "UNKNOWN",
+                title: "title2",
+                url: "https://some2.url",
               },
             ],
-            text: "No PRs left to merge.",
-            channel: "1234",
-          });
-          expect(mockWebClient.chat.postMessage).toBeCalledTimes(1);
+            "No PRs left to merge.",
+            "1234"
+          );
+          expect(mockPlatformClient.postMergeMessage).toBeCalledTimes(1);
         });
       });
 
@@ -695,9 +666,9 @@ describe("handleStateReported", () => {
         });
 
         it("should not post a message", async () => {
-          await handleStateReported(mockWebClient, mockBody, "1234");
+          await handleStateReported(mockPlatformClient, mockBody, "1234");
 
-          expect(mockWebClient.chat.postMessage).not.toBeCalled();
+          expect(mockPlatformClient.postMergeMessage).not.toBeCalled();
         });
       });
     });
