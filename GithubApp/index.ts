@@ -51,6 +51,7 @@ const httpTrigger: AzureFunction = async (
 
   context.log(JSON.stringify(req.body));
 
+  const { sender } = req.body;
   const { action, pull_request } = req.body as PullRequestEvent;
   const { label } = req.body as PullRequestLabeledEvent;
   const { state } = req.body as StatusEvent;
@@ -80,6 +81,7 @@ const httpTrigger: AzureFunction = async (
             headline,
             pullRequest: pull_request,
             changed: true,
+            creator: await client.formatAssignees([sender])[0],
           },
           channel
         );
@@ -98,6 +100,7 @@ const httpTrigger: AzureFunction = async (
             headline,
             pullRequest: pull_request,
             changed: true,
+            creator: await client.formatAssignees([sender])[0],
           },
           channel
         );
@@ -113,6 +116,7 @@ const httpTrigger: AzureFunction = async (
         const assigned = await client.formatAssignees(
           pull_request.requested_reviewers
         );
+        const creator = await client.formatAssignees([sender])[0];
 
         await client.postReviewMessage(
           {
@@ -120,6 +124,7 @@ const httpTrigger: AzureFunction = async (
             pullRequest: pull_request,
             changed: true,
             assigned,
+            creator,
           },
           channel
         );

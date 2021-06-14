@@ -34,6 +34,7 @@ describe("HTTP Trigger", () => {
   };
 
   mockCreateClient.mockReturnValue(mockClient);
+  mockClient.formatAssignees.mockResolvedValue(["person1", "person2"]);
 
   const mockListConversations = jest.fn(() => ({
     channels: [
