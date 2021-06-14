@@ -69,6 +69,11 @@ variable "teams_token" {
   description = "Outgoing webhook token for Teams Client"
 }
 
+variable "teams_incoming_webhook" {
+  type        = string
+  description = "Incoming webhook url for Teams Client"
+}
+
 resource "random_string" "storage_name" {
   length  = 24
   upper   = false

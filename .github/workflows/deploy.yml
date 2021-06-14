@@ -52,6 +52,8 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+          TEAMS_TOKEN: ${{ secrets.TEAMS_TOKEN }}
+          TEAMS_INCOMING_WEBHOOK: ${{ secrets.TEAMS_INCOMING_WEBHOOK }}
           GHAPP_SECRET: ${{ secrets.GHAPP_SECRET }}
           GHAPP_PRIVATE_KEY: ${{ secrets.GHAPP_PRIVATE_KEY }}
           GH_APP_ID: ${{ secrets.GH_APP_ID }}

@@ -8,4 +8,6 @@ terraform apply \
     -var="github_installation_id=$GH_INSTALLATION_ID" \
     -var="github_hostname=$GH_HOSTNAME" \
     -var="github_owner=$GH_OWNER" \
-    -var="github_repository=$GH_REPOSITORY"
+    -var="github_repository=$GH_REPOSITORY" \
+    -var="teams_token=$TEAMS_TOKEN" \
+    -var="teams_incoming_webhook=$TEAMS_INCOMING_WEBHOOK"
