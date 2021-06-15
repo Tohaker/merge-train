@@ -25,7 +25,7 @@ export type SlackUser = {
 export type CardProps = {
   headline: string;
   pullRequest: PullRequest;
-  creator: string;
+  creator?: string;
   changed?: boolean;
   assigned?: string[];
 };
