@@ -170,6 +170,7 @@ describe("HTTP Trigger", () => {
               headline: "A new PR is ready to merge",
               pullRequest: mockRequest.body.pull_request,
               changed: true,
+              creator: "person1",
             },
             "1234"
           );
@@ -194,6 +195,7 @@ describe("HTTP Trigger", () => {
                 headline: "A new PR is ready to merge",
                 pullRequest: mockRequest.body.pull_request,
                 changed: true,
+                creator: "person1",
               },
               ""
             );
@@ -238,6 +240,7 @@ describe("HTTP Trigger", () => {
               headline: "A PR has had its status changed",
               pullRequest: mockRequest.body.pull_request,
               changed: true,
+              creator: "person1",
             },
             "1234"
           );
@@ -256,6 +259,7 @@ describe("HTTP Trigger", () => {
                 headline: "A PR has had its status changed",
                 pullRequest: mockRequest.body.pull_request,
                 changed: true,
+                creator: "person1",
               },
               ""
             );
@@ -309,7 +313,6 @@ describe("HTTP Trigger", () => {
 
         describe("given the request has a requested_team", () => {
           it("should post a message to the reviews channel", async () => {
-            mockClient.formatAssignees.mockResolvedValue([{ data: true }]);
             mockRequest.body["requested_team"] = { name: "some team" };
 
             await httpTrigger(mockContext, mockRequest);
@@ -319,7 +322,8 @@ describe("HTTP Trigger", () => {
                 headline: "A PR has been marked for review",
                 pullRequest: mockRequest.body.pull_request,
                 changed: true,
-                assigned: [{ data: true }],
+                creator: "person1",
+                assigned: ["person1", "person2"],
               },
               "4567"
             );
@@ -332,7 +336,6 @@ describe("HTTP Trigger", () => {
             });
 
             it("should post a message without a channel", async () => {
-              mockClient.formatAssignees.mockResolvedValue([{ data: true }]);
               mockRequest.body["requested_team"] = { name: "some team" };
 
               await httpTrigger(mockContext, mockRequest);
@@ -342,7 +345,8 @@ describe("HTTP Trigger", () => {
                   headline: "A PR has been marked for review",
                   pullRequest: mockRequest.body.pull_request,
                   changed: true,
-                  assigned: [{ data: true }],
+                  creator: "person1",
+                  assigned: ["person1", "person2"],
                 },
                 ""
               );

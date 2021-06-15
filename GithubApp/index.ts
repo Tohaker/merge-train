@@ -69,6 +69,7 @@ const httpTrigger: AzureFunction = async (
   }
 
   const labelName = label?.name;
+  const creator = (await client.formatAssignees([sender]))[0];
 
   switch (action) {
     case "labeled": {
@@ -81,7 +82,7 @@ const httpTrigger: AzureFunction = async (
             headline,
             pullRequest: pull_request,
             changed: true,
-            creator: await client.formatAssignees([sender])[0],
+            creator,
           },
           channel
         );
@@ -100,7 +101,7 @@ const httpTrigger: AzureFunction = async (
             headline,
             pullRequest: pull_request,
             changed: true,
-            creator: await client.formatAssignees([sender])[0],
+            creator,
           },
           channel
         );
@@ -116,7 +117,6 @@ const httpTrigger: AzureFunction = async (
         const assigned = await client.formatAssignees(
           pull_request.requested_reviewers
         );
-        const creator = await client.formatAssignees([sender])[0];
 
         await client.postReviewMessage(
           {
