@@ -8,6 +8,7 @@ export const createTeamsReviewCard = ({
   headline,
   pullRequest,
   assigned,
+  creator,
 }: CardProps) => ({
   "@type": "MessageCard",
   "@context": "http://schema.org/extensions",
@@ -22,7 +23,7 @@ export const createTeamsReviewCard = ({
       facts: [
         {
           name: "Creator",
-          value: pullRequest.user.name,
+          value: creator,
         },
         {
           name: "Assigned to",

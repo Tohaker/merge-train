@@ -30,6 +30,7 @@ describe("Create Teams Review card", () => {
       headline: "headline",
       pullRequest: mockPullRequest,
       assigned: ["1235", "1236"],
+      creator: "creator",
     });
 
     expect(result).toMatchObject({
@@ -46,7 +47,7 @@ describe("Create Teams Review card", () => {
           facts: [
             {
               name: "Creator",
-              value: "gh_user",
+              value: "creator",
             },
             {
               name: "Assigned to",

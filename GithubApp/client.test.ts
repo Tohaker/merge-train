@@ -193,7 +193,6 @@ describe("Client", () => {
 
     it("should use the node-fetch to post a simple message", async () => {
       const { postSimpleMessage } = createClient();
-      const mockMergeableItems = [{ data: true }];
 
       await postSimpleMessage("message");
 
@@ -220,7 +219,6 @@ describe("Client", () => {
           name: "user2",
         },
         {
-          login: "user3_login",
           id: "345",
         },
       ];
@@ -228,7 +226,7 @@ describe("Client", () => {
       //@ts-ignore
       const assignees = await formatAssignees(mockReviewers);
 
-      expect(assignees).toEqual(["user1", "user2", "345"]);
+      expect(assignees).toEqual(["user1_login", "user2_login", "345"]);
     });
   });
 });

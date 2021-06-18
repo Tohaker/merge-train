@@ -38,7 +38,7 @@ const formatSlackAssignees =
 
 const formatTeamsAssignees = (reviewers: (User | Team)[]) => {
   return Promise.resolve(
-    reviewers.map((user) => ("name" in user ? user.name : user.id.toString()))
+    reviewers.map((user) => ("login" in user ? user.login : user.id.toString()))
   );
 };
 
