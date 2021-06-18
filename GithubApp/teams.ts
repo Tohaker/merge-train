@@ -25,7 +25,7 @@ export const createTeamsReviewCard = ({
           name: "Creator",
           value: creator,
         },
-        {
+        assigned && {
           name: "Assigned to",
           value: assigned.join(", "),
         },
@@ -33,7 +33,7 @@ export const createTeamsReviewCard = ({
           name: "When",
           value: new Date(pullRequest.updated_at).toLocaleString("en-GB"),
         },
-      ],
+      ].filter((v) => v),
       markdown: true,
     },
   ],
