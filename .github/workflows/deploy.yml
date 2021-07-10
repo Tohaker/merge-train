@@ -27,37 +27,37 @@ jobs:
       - name: Test App
         run: npm run test:ci
 
-      - name: Package App
-        run: |
-          npm ci --only=prod
-          npm i -g @ffflorian/jszip-cli mkdirp
-          npm run build:zip
+      # - name: Package App
+      #   run: |
+      #     npm ci --only=prod
+      #     npm i -g @ffflorian/jszip-cli mkdirp
+      #     npm run build:zip
 
-      - name: Initialise terraform
-        run: |
-          cd deployment
-          terraform init
-        env:
-          ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}
+      # - name: Initialise terraform
+      #   run: |
+      #     cd deployment
+      #     terraform init
+      #   env:
+      #     ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}
 
-      - name: Apply terraform
-        run: |
-          cd deployment
-          chmod +x deploy.sh
-          ./deploy.sh
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
-          TEAMS_TOKEN: ${{ secrets.TEAMS_TOKEN }}
-          TEAMS_INCOMING_WEBHOOK: ${{ secrets.TEAMS_INCOMING_WEBHOOK }}
-          GHAPP_SECRET: ${{ secrets.GHAPP_SECRET }}
-          GHAPP_PRIVATE_KEY: ${{ secrets.GHAPP_PRIVATE_KEY }}
-          GH_APP_ID: ${{ secrets.GH_APP_ID }}
-          GH_INSTALLATION_ID: ${{ secrets.GH_INSTALLATION_ID }}
-          GH_HOSTNAME: ${{ secrets.GH_HOSTNAME }}
-          GH_OWNER: ${{ secrets.GH_OWNER }}
-          GH_REPOSITORY: ${{ secrets.GH_REPOSITORY }}
+      # - name: Apply terraform
+      #   run: |
+      #     cd deployment
+      #     chmod +x deploy.sh
+      #     ./deploy.sh
+      #   env:
+      #     ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      #     ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      #     ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      #     ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      #     SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+      #     TEAMS_TOKEN: ${{ secrets.TEAMS_TOKEN }}
+      #     TEAMS_INCOMING_WEBHOOK: ${{ secrets.TEAMS_INCOMING_WEBHOOK }}
+      #     GHAPP_SECRET: ${{ secrets.GHAPP_SECRET }}
+      #     GHAPP_PRIVATE_KEY: ${{ secrets.GHAPP_PRIVATE_KEY }}
+      #     GH_APP_ID: ${{ secrets.GH_APP_ID }}
+      #     GH_INSTALLATION_ID: ${{ secrets.GH_INSTALLATION_ID }}
+      #     GH_HOSTNAME: ${{ secrets.GH_HOSTNAME }}
+      #     GH_OWNER: ${{ secrets.GH_OWNER }}
+      #     GH_REPOSITORY: ${{ secrets.GH_REPOSITORY }}
